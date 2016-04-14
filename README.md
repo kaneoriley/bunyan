@@ -21,6 +21,6 @@ Then, add the following to your module dependencies:
 
 ```gradle
 dependencies {
-    compile 'me.oriley:bunyan:0.1'
+    compile 'me.oriley:bunyan:0.1.1'
 }
 ```
