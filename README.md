@@ -1,29 +1,34 @@
 [![Release](https://jitpack.io/v/com.github.oriley-me/bunyan.svg)](https://jitpack.io/#com.github.oriley-me/bunyan) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan) [![Dependency Status](https://www.versioneye.com/user/projects/56b6a5840a0ff50035ba881d/badge.svg?style=flat)](https://www.versioneye.com/user/projects/56b6a5840a0ff50035ba881d)
+<a href="http://www.methodscount.com/?lib=me.oriley%3Abunyan%3A0.1.1"><img src="https://img.shields.io/badge/bunyan_runtime-methods: 77 | deps: 20 | size: 16 KB-f44336.svg"></img></a>
 
 # Bunyan
 ![Logo](artwork/icon.png)
 
-SLF4J logger factory with simple Logcat and Crashlytics loggers built in.
+Logger factory with simple Logcat and Crashlytics loggers built in.
 
-## Usage
+## Initialisation
 
-All you need to do is add the dependency and Bunyan will automatically handle SLF4J logging. Included are two sample
-loggers, that you will need to add manually in a static block inside your `Application` class like so:
+Bunyan is designed to provide an SLF4J style logging API without required massive dependencies like most other libraries.
+It also includes an easy to use interface for adding custom loggers, to hook into whatever analytics package you use.
+Included are two sample loggers, that you will need to add to `Bunyan` manually in a static block inside your
+`Application` class like so:
 
 ```java
 static {
-    // For output to Logcat
+    // For outputting to Logcat
     Bunyan.addLogger(new BunyanLogcatLogger());
 
-    // For Crashlytics logging
+    // For Crashlytics logging (if you have the Crashlytics library included in your application)
     Bunyan.addLogger(new BunyanCrashlyticsLogger(Crashlytics.class));
 
-    // The addLogger method also accepts a varargs array of loggers, so you can include both like this:
+    // The addLogger method accepts a varargs array of loggers, so you can include multiple in the same call:
     Bunyan.addLogger(new BunyanLogcatLogger(), new BunyanCrashlyticsLogger(Crashlytics.class));
 }
 ```
 
-Configuration options must be setup inside the same static block:
+No loggers are automatically installed, so by default no logging will be done if you don't add any.
+
+Configuration options must also be setup inside the same static block:
 
 ```java
 static {
@@ -36,9 +41,9 @@ static {
     // Set the desired style of the log tags (more info below). Here is a suggested configuration (defaults to SHORT).
     Bunyan.setTagStyle(BuildConfig.DEBUG ? TagStyle.FULL : TagStyle.SHORT);
 
-    // Set whether to log any exceptions passed to SLF4J to Crashlytics as Non-Fatals. Defaults to false.
+    // Set whether to log any exceptions passed to log.error() to Crashlytics as Non-Fatals. Defaults to false.
     // Has no effect if your application does not include Crashlytics.
-    Bunyan.setLogExceptionToCrashlytics(true);
+    Bunyan.setLogExceptionsToCrashlytics(true);
 }
 ```
 
@@ -59,6 +64,10 @@ There are 4 values for `TagStyle`:
  * LONG:        The enclosing class name including package, i.e. `com.myapp.MyActivity`
  * FULL:        Same as LONG but with calling method name appended, i.e. `com.myapp.MyActivity[onResume]`
 
+ Note that FULL tags require traversing the stack trace to find method names, which could have an adverse impact on
+ performance. This is why I would suggest only using FULL on debug builds, or passing in the method name as part of
+ the message instead if necessary.
+
 # Custom Loggers
 
 You also have the option of adding your own custom loggers for capturing logs to send to your analytics platform of
@@ -74,6 +83,39 @@ static {
     Bunyan.addLogger(new MyAnalyticsLogger()); // Where MyAnalyticsLogger is your custom class
 }
 ```
+
+# Usage
+
+Usage is the same as SLF4J based logging. The included `org.slf4j.LoggerFactory` class takes care of creating logger
+instances for your classes. It is a replacement for the original SLF4J factory so that anyone using [Project Lombok](https://projectlombok.org/)
+can still use the `@Slf4j` annotation to automatically create a logger for your class (it injects the call to
+`LoggerFactory.getLogger(MyClass.class)` for you).
+
+If you don't use Project Lombok, you will need to create a field in each class where you wish to use Bunyan, like so:
+
+```java
+public class MyClass {
+
+    // Not required if using Lomboks @Slf4j annotation
+    private static final Logger log = LoggerFactory.getLogger(MyClass.class);
+
+    public void myMethod(int value) {
+        try {
+            log.trace("method called, time: {}", System.currentTimeMillis());
+            log.debug("current value: {}, new value: {}", mValue, value);
+            log.info("slf4j logging is much nicer than android.util.Log: {}, how much?: {}", true, Integer.MAX_VALUE);
+            log.warn("wtf, this shouldn't be happening");
+        } catch (Exception e) {
+            log.error("error running myMethod", e);
+        }
+    }
+}
+```
+
+If you like the efficiency and style of SLF4J, this library will give you that but with a much lower method count. Of
+course not all features of SLF4J are implemented in order to keeps things simple and keep the size down, so if you find
+it too limiting or something is missing, I would encourage you to look at any of the other available libraries which
+include a full distribution.
 
 # Gradle Dependency
 

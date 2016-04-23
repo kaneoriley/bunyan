@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.slf4j.impl;
+package me.oriley.bunyan;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;

@@ -14,22 +14,24 @@
  *  limitations under the License.
  */
 
-package org.slf4j.impl;
+package me.oriley.bunyan;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
-import org.slf4j.impl.Bunyan.Level;
+import me.oriley.bunyan.Bunyan.Level;
 
 /*
  * Simple logcat appender
  *
  * If TagStyle set to restricted, will limit length to 23 characters (based on https://github.com/mvysny/slf4j-handroid)
  *
+ * Log messages are line wrapped every 4000 characters due to limit (based on https://github.com/JakeWharton/timber)
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings("unused")
 public final class BunyanLogcatLogger implements BunyanLogger {
 
+    private static final int MAX_MSG_LENGTH = 4000;
     private static final int MAX_TAG_LENGTH = 23;
 
     @Override
@@ -38,7 +40,24 @@ public final class BunyanLogcatLogger implements BunyanLogger {
                          @NonNull String message,
                          @Nullable Throwable t) {
         message = sanitiseMessage(message).trim();
-        Log.println(level.priority, sanitiseTag(tag), message);
+        tag = sanitiseTag(tag);
+
+        if (message.length() < MAX_MSG_LENGTH) {
+            Log.println(level.priority, tag, message);
+        } else {
+            for (int i = 0, length = message.length(); i < length; i++) {
+                int newline = message.indexOf('\n', i);
+                newline = newline != -1 ? newline : length;
+
+                while (i < newline) {
+                    int end = Math.min(newline, i + MAX_MSG_LENGTH);
+                    String part = message.substring(i, end);
+                    Log.println(level.priority, tag, part);
+                    i = end;
+                }
+            }
+        }
+
         if (t != null) {
             t.printStackTrace();
         }

@@ -14,7 +14,7 @@
  *  limitations under the License.
  */
 
-package org.slf4j.impl;
+package me.oriley.bunyan;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -87,10 +87,15 @@ public final class Bunyan {
         Collections.addAll(sLoggers, loggers);
     }
 
-    static void logEvent(@NonNull Level level,
-                         @NonNull String name,
-                         @NonNull String message,
-                         @Nullable Throwable t) {
+    public static void logEvent(@NonNull Level level,
+                                @NonNull String name,
+                                @Nullable String message,
+                                @Nullable Throwable t) {
+        if (message == null) {
+            // Not logging a null message. That would be stupid.
+            return;
+        }
+
         String methodName = "";
 
         if (sTagStyle == TagStyle.FULL) {

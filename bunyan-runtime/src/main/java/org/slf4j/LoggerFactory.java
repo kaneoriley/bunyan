@@ -14,28 +14,10 @@
  *  limitations under the License.
  */
 
-package org.slf4j.impl;
+package org.slf4j;
 
-import android.support.annotation.NonNull;
-import org.slf4j.helpers.NOPMDCAdapter;
-import org.slf4j.spi.MDCAdapter;
+import me.oriley.bunyan.BunyanLoggerFactory;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
-public final class StaticMDCBinder {
-
-    public static final StaticMDCBinder SINGLETON = new StaticMDCBinder();
-
-    private StaticMDCBinder() {
-        throw new IllegalAccessError("no instances");
-    }
-
-    @NonNull
-    public MDCAdapter getMDCA() {
-        return new NOPMDCAdapter();
-    }
-
-    @NonNull
-    public String getMDCAdapterClassStr() {
-        return NOPMDCAdapter.class.getName();
-    }
+@SuppressWarnings("unused")
+public final class LoggerFactory extends BunyanLoggerFactory {
 }

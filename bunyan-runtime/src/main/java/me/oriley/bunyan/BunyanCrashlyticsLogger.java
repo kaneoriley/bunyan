@@ -1,4 +1,4 @@
-package org.slf4j.impl;
+package me.oriley.bunyan;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import android.util.Log;
 import com.crashlytics.android.Crashlytics;
 
-import org.slf4j.impl.Bunyan.Level;
+import me.oriley.bunyan.Bunyan.Level;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class BunyanCrashlyticsLogger implements BunyanLogger {
@@ -15,6 +15,7 @@ public class BunyanCrashlyticsLogger implements BunyanLogger {
     public BunyanCrashlyticsLogger(@NonNull Class<? extends Crashlytics> crashlyticsClass) {
         // We don't need the class reference, but it prevents addition when Crashlytics is not included in the app.
     }
+
 
     @Override
     public void logEvent(@NonNull Level level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
