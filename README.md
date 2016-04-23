@@ -1,5 +1,5 @@
 [![Release](https://jitpack.io/v/com.github.oriley-me/bunyan.svg)](https://jitpack.io/#com.github.oriley-me/bunyan) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan) [![Dependency Status](https://www.versioneye.com/user/projects/56b6a5840a0ff50035ba881d/badge.svg?style=flat)](https://www.versioneye.com/user/projects/56b6a5840a0ff50035ba881d)
-<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-core%3A0.1.1"><img src="https://img.shields.io/badge/bunyan_core-methods: 75 | deps: 20 | size: 13 KB-f44336.svg"></img></a> <a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-lombok%3A0.2.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 5 | deps: 20 | size: 3 KB-f44336.svg"></img></a>
+<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-core%3A0.2.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 75 | deps: 20 | size: 13 KB-f44336.svg"></img></a> <a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-lombok%3A0.2.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 5 | deps: 20 | size: 3 KB-f44336.svg"></img></a>
 
 # Bunyan
 ![Logo](artwork/icon.png)
