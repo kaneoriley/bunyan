@@ -20,13 +20,12 @@ android {
 }
 
 dependencies {
-    // Logback
-    compile('com.github.tony19:logback-android-classic:1.1.1-5') {
-        exclude group: 'com.google.android', module: 'android'
-        exclude module: 'apktool-lib'
-    }
+    // SLF4J
     compile 'org.slf4j:slf4j-api:1.7.21'
 
+    // Crashlytics
+    provided 'com.crashlytics.sdk.android:crashlytics:2.5.5'
+
     // Support annotations
-    compile "com.android.support:support-annotations:23.1.1"
+    compile "com.android.support:support-annotations:23.3.0"
 }

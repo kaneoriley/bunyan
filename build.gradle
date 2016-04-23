@@ -3,6 +3,7 @@ apply plugin: 'com.github.ben-manes.versions' // ./gradlew dependencyUpdates
 buildscript {
     repositories {
         jcenter()
+        maven { url 'https://maven.fabric.io/public' }
         mavenLocal()
     }
 
@@ -17,6 +18,7 @@ buildscript {
 allprojects {
     repositories {
         jcenter()
+        maven { url 'https://maven.fabric.io/public' }
         mavenLocal()
     }
 
