@@ -1,1 +1,1 @@
-include ':bunyan-runtime'
+include ':bunyan-core', ':bunyan-lombok'

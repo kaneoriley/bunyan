@@ -122,4 +122,19 @@ public final class Bunyan {
     private static String getEnclosingClassName(@NonNull String className) {
         return className.substring(0, className.lastIndexOf('.'));
     }
+
+    @NonNull
+    public static String getLoggerName(@NonNull Class clazz) {
+        String className = clazz.getName();
+
+        switch (Bunyan.getTagStyle()) {
+            case RESTRICTED:
+            case SHORT:
+            default:
+                return className.substring(className.lastIndexOf('.') + 1).trim();
+            case LONG:
+            case FULL:
+                return className;
+        }
+    }
 }
