@@ -24,11 +24,15 @@ import me.oriley.bunyan.Bunyan.Level;
 public class BunyanCoreLogger {
 
     @NonNull
+    private final Level mThreshold;
+
+    @NonNull
     private final String mName;
 
 
-    public BunyanCoreLogger(@NonNull String name) {
-        mName = name;
+    public BunyanCoreLogger(@NonNull Class c) {
+        mThreshold = Bunyan.getThreshold(c);
+        mName = Bunyan.getLoggerName(c);
     }
 
 
@@ -113,15 +117,19 @@ public class BunyanCoreLogger {
     // endregion ERROR
 
     private void log(@NonNull Level level, @Nullable String format, @Nullable Object... argArray) {
-        if (Bunyan.isLoggable(level)) {
+        if (isLoggable(level)) {
             FormattingPair ft = MessageFormatter.formatArray(format, argArray);
             Bunyan.logEvent(level, mName, ft.getMessage(), ft.getThrowable());
         }
     }
 
     private void log(@NonNull Level level, @Nullable String message, @Nullable Throwable throwable) {
-        if (Bunyan.isLoggable(level)) {
+        if (isLoggable(level)) {
             Bunyan.logEvent(level, mName, message, throwable);
         }
+    }
+
+    private boolean isLoggable(@NonNull Level level) {
+        return level.ordinal() <= mThreshold.ordinal();
     }
 }

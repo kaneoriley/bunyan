@@ -70,6 +70,20 @@ There are 4 values for `TagStyle`:
  performance. This is why I would suggest only using FULL on debug builds, or passing in the method name as part of
  the message instead if necessary.
 
+You can also set class specific thresholds to override the global level if you need to:
+
+```java
+static {
+
+    ...
+
+    // Quieten a particularly noisy class
+    Bunyan.setClassThreshold(SoMuchSpam.class, Level.ERROR);
+
+    // Relax restrictions on a class while you're actively working on it
+    Bunyan.setClassThreshold(CurrentlyWorkingOn.class, Level.TRACE);
+}
+
 
 Included are two sample loggers, that you will need to add to Bunyan manually inside the static initialisation block.
 

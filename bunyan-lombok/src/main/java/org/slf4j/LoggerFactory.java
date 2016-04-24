@@ -30,15 +30,14 @@ import static me.oriley.bunyan.Bunyan.getLoggerName;
 public final class LoggerFactory {
 
     @NonNull
-    private static final ConcurrentMap<String, Logger> mLoggerMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Class, Logger> mLoggerMap = new ConcurrentHashMap<>();
 
     @NonNull
-    public static Logger getLogger(@NonNull Class<?> clazz) {
-        String loggerName = getLoggerName(clazz);
-        Logger logger = mLoggerMap.get(loggerName);
+    public static Logger getLogger(@NonNull Class<?> c) {
+        Logger logger = mLoggerMap.get(c);
         if (logger == null) {
-            Logger newLogger = new Logger(loggerName);
-            Logger oldLogger = mLoggerMap.putIfAbsent(loggerName, newLogger);
+            Logger newLogger = new Logger(c);
+            Logger oldLogger = mLoggerMap.putIfAbsent(c, newLogger);
             logger = oldLogger == null ? newLogger : oldLogger;
         }
         return logger;

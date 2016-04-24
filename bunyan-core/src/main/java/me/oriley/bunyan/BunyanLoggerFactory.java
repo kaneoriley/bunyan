@@ -11,15 +11,14 @@ import static me.oriley.bunyan.Bunyan.getLoggerName;
 public final class BunyanLoggerFactory {
 
     @NonNull
-    private static final ConcurrentMap<String, BunyanCoreLogger> mLoggerMap = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Class, BunyanCoreLogger> mLoggerMap = new ConcurrentHashMap<>();
 
     @NonNull
-    public static BunyanCoreLogger getLogger(@NonNull Class<?> clazz) {
-        String loggerName = getLoggerName(clazz);
-        BunyanCoreLogger logger = mLoggerMap.get(loggerName);
+    public static BunyanCoreLogger getLogger(@NonNull Class<?> c) {
+        BunyanCoreLogger logger = mLoggerMap.get(c);
         if (logger == null) {
-            BunyanCoreLogger newLogger = new BunyanCoreLogger(loggerName);
-            BunyanCoreLogger oldLogger = mLoggerMap.putIfAbsent(loggerName, newLogger);
+            BunyanCoreLogger newLogger = new BunyanCoreLogger(c);
+            BunyanCoreLogger oldLogger = mLoggerMap.putIfAbsent(c, newLogger);
             logger = oldLogger == null ? newLogger : oldLogger;
         }
         return logger;

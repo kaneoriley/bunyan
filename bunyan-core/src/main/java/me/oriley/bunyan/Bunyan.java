@@ -20,9 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class Bunyan {
@@ -47,25 +45,37 @@ public final class Bunyan {
     private static final List<BunyanLogger> sLoggers = new ArrayList<>();
 
     @NonNull
-    private static Level sThreshold = Level.INFO;
+    private static final Map<Class, Level> sClassThresholds = new HashMap<>();
+
+    @NonNull
+    private static Level sGlobalThreshold = Level.INFO;
 
     @NonNull
     private static TagStyle sTagStyle = TagStyle.SHORT;
 
 
     public static void init(@NonNull Level threshold, @NonNull TagStyle tagStyle) {
-        sThreshold = threshold;
+        sGlobalThreshold = threshold;
         sTagStyle = tagStyle;
     }
 
 
-    static boolean isLoggable(@NonNull Level level) {
-        return level.ordinal() <= sThreshold.ordinal();
+    @NonNull
+    static Level getThreshold(@NonNull Class c) {
+        if (sClassThresholds.containsKey(c)) {
+            return sClassThresholds.get(c);
+        } else {
+            return sGlobalThreshold;
+        }
     }
 
     @NonNull
     static TagStyle getTagStyle() {
         return sTagStyle;
+    }
+
+    public static void setClassThreshold(@NonNull Class clazz, @NonNull Level level) {
+        sClassThresholds.put(clazz, level);
     }
 
     public static void addLogger(@NonNull BunyanLogger logger) {
