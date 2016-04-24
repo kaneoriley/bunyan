@@ -29,27 +29,21 @@ threshold level, resulting in less Object allocation, faster execution, and lowe
 
 Check out [this SLF4j documentation](http://www.slf4j.org/faq.html#logging_performance) for a more thorough explanation.
 
-## Initialisation
+## Configuration
 
-You must initialise Bunyan manually in a static block inside your `Application` class like so:
+Bunyan requires you to add a `bunyan.xml` to your root `assets` folder, to read configuration details. If this file is
+not present, there are default values which will be used.
 
-```java
-static {
-    // Initialise Bunyan (these are the default values)
-    Bunyan.init(Level.INFO, TagStyle.SHORT);
+A basic configuration file is as follows:
 
-    // Alternate initialisation for different build types (this is my recommended configuration)
-    if (BuildConfig.DEBUG) {
-        // Debug build, allow more logging and use full class/method name in tag
-        Bunyan.init(Level.DEBUG, TagStyle.FULL);
-    } else {
-        // Release build, reduce logging and use short tag for better performance
-        Bunyan.init(Level.INFO, TagStyle.SHORT);
-    }
-}
+```xml
+<bunyan>
+    <!-- global threshold and tag style -->
+    <global level="INFO" tagstyle="SHORT"/> <!-- These are the default values -->
+</bunyan>
 ```
 
-There are 5 values for logging threshold `Level`:
+There are 5 acceptable values for logging threshold `level`:
 
  * ERROR:  Threshold for `android.util.Log.ERROR` / `log.error()`
  * WARN:   Threshold for `android.util.Log.WARN` / `log.warn()`
@@ -57,9 +51,9 @@ There are 5 values for logging threshold `Level`:
  * DEBUG:  Threshold for `android.util.Log.DEBUG` / `log.debug()`
  * TRACE:  Threshold for `android.util.Log.VERBOSE` / `log.trace()`
 
-Any logs with a lower priority than the value passed to `init()` will not be passed along to any appenders.
+Any logs with a lower priority than the value specified will not be passed along to any of the loggers.
 
-There are 4 values for `TagStyle`:
+There are 4 acceptable values for `tagstyle`:
 
  * RESTRICTED:  Restrict to 23 characters (suggested maximum for `Log`)
  * SHORT:       The enclosing class simple name, i.e. `MyActivity`
@@ -72,20 +66,20 @@ There are 4 values for `TagStyle`:
 
 You can also set class specific thresholds to override the global level if you need to:
 
-```java
-static {
+```xml
+<bunyan>
+    <!-- global default values and configuration -->
+    <global level="INFO" tagstyle="SHORT"/>
 
-    ...
-
-    // Quieten a particularly noisy class
-    Bunyan.setClassThreshold(SoMuchSpam.class, Level.ERROR);
-
-    // Relax restrictions on a class while you're actively working on it
-    Bunyan.setClassThreshold(CurrentlyWorkingOn.class, Level.TRACE);
-}
+    <!-- Class specific thresholds -->
+    <logger class="my.app.SpamController" level="ERROR" /> <!-- To quieten a particularly noisy class temporarily -->
+    <logger class="my.app.CurrentActivity" level="TRACE" /> <!-- For additional logging whilst developing -->
+</bunyan>
+```
 
 
-Included are two sample loggers, that you will need to add to Bunyan manually inside the static initialisation block.
+Included are two sample loggers, that you will need to add to Bunyan manually inside a static block inside your
+`Application` class, to ensure they are initialised early and can capture all logging in your application.
 
 #### BunyanLogcatLogger
 
@@ -94,9 +88,6 @@ to handle this.
 
 ```java
 static {
-
-    ...
-
     Bunyan.addLogger(new BunyanLogcatLogger());
 }
 ```
@@ -111,9 +102,7 @@ logged exceptions should be sent to Crashlytics as a Non-Fatal (defaults to fals
 
 ```java
 static {
-
     ...
-
     Bunyan.addLogger(new BunyanCrashlyticsLogger(Crashlytics.class, true));
 }
 ```
@@ -123,9 +112,6 @@ No loggers are automatically installed, so by default no logging will be done if
 
 ```java
 static {
-
-    ...
-
     Bunyan.addLoggers(new BunyanLogcatLogger(), new BunyanCrashlyticsLogger(Crashlytics.class, true));
 }
 ```
@@ -138,9 +124,7 @@ the logger to Bunyan inside the static initialisation block like so:
 
 ```java
 static {
-
     ...
-
     Bunyan.addLogger(new MyAnalyticsLogger()); // Where MyAnalyticsLogger is your custom class
 }
 ```
@@ -175,13 +159,15 @@ Some examples of using the SLF4J logging interface:
 
 ```java
 public void myMethod(int value) {
+    log.trace("method called, time: {}", System.currentTimeMillis());
+    log.debug("current value: {}, new value: {}", mValue, value);
+    log.info("slf4j logging is much nicer than android.util.Log: {}, how much?: {}", true, Integer.MAX_VALUE);
+    log.warn("wtf, much logs");
+
     try {
-        log.trace("method called, time: {}", System.currentTimeMillis());
-        log.debug("current value: {}, new value: {}", mValue, value);
-        log.info("slf4j logging is much nicer than android.util.Log: {}, how much?: {}", true, Integer.MAX_VALUE);
-        log.warn("wtf, this shouldn't be happening");
+        doSomethingThatMightCauseAnException();
     } catch (Exception e) {
-        log.error("error running myMethod", e);
+        log.error("error running myMethod with parameter: {}", value, e);
     }
 }
 ```

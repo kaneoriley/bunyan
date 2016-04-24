@@ -31,8 +31,9 @@ public class BunyanCoreLogger {
 
 
     public BunyanCoreLogger(@NonNull Class c) {
-        mThreshold = Bunyan.getThreshold(c);
-        mName = Bunyan.getLoggerName(c);
+        String className = c.getName();
+        mThreshold = Bunyan.getThreshold(className);
+        mName = Bunyan.getLoggerName(className);
     }
 
 

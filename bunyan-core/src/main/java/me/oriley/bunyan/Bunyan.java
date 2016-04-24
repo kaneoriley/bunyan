@@ -18,12 +18,43 @@ package me.oriley.bunyan;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.*;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class Bunyan {
+
+    private static final String TAG = Bunyan.class.getSimpleName();
+
+    private static final String BUNYAN_CLASS = getEnclosingClassName(Bunyan.class.getName());
+    private static final String BUNYAN_CONFIG = "assets/bunyan.xml";
+
+    private static final String XML_ATTR_CLASS = "class";
+    private static final String XML_ATTR_LEVEL = "level";
+    private static final String XML_ATTR_TAGSTYLE = "tagstyle";
+
+    private static final String XML_GLOBAL = "global";
+    private static final String XML_LOGGER = "logger";
+
+    @NonNull
+    private static final List<BunyanLogger> sLoggers = new ArrayList<>();
+
+    @NonNull
+    private static final Map<String, Level> sClassThresholds = new HashMap<>();
+
+    @NonNull
+    private static Level sGlobalThreshold = Level.INFO;
+
+    @NonNull
+    private static TagStyle sTagStyle = TagStyle.SHORT;
 
     public enum Level {
         ERROR(Log.ERROR), WARN(Log.WARN), INFO(Log.INFO), DEBUG(Log.DEBUG), TRACE(Log.VERBOSE);
@@ -33,37 +64,99 @@ public final class Bunyan {
         Level(int priority) {
             this.priority = priority;
         }
+
+        @Nullable
+        static Level parse(@Nullable String levelName) {
+            for (Level level : values()) {
+                if (level.name().equals(levelName)) {
+                    return level;
+                }
+            }
+
+            // Couldn't find
+            return null;
+        }
     }
 
     public enum TagStyle {
-        RESTRICTED, SHORT, LONG, FULL
+        RESTRICTED, SHORT, LONG, FULL;
+
+        @Nullable
+        static TagStyle parse(@Nullable String styleName) {
+            for (TagStyle style : values()) {
+                if (style.name().equals(styleName)) {
+                    return style;
+                }
+            }
+
+            // Couldn't find
+            return null;
+        }
     }
 
-    private static final String BUNYAN_CLASS = getEnclosingClassName(Bunyan.class.getName());
-
-    @NonNull
-    private static final List<BunyanLogger> sLoggers = new ArrayList<>();
-
-    @NonNull
-    private static final Map<Class, Level> sClassThresholds = new HashMap<>();
-
-    @NonNull
-    private static Level sGlobalThreshold = Level.INFO;
-
-    @NonNull
-    private static TagStyle sTagStyle = TagStyle.SHORT;
-
-
-    public static void init(@NonNull Level threshold, @NonNull TagStyle tagStyle) {
-        sGlobalThreshold = threshold;
-        sTagStyle = tagStyle;
+    static {
+        try {
+            parseConfig();
+        } catch (Throwable t) {
+            Log.e(TAG, "Error reading XML config, using defaults", t);
+        }
     }
 
+    private static void parseConfig() throws XmlPullParserException, IOException {
+        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        XmlPullParser xpp = factory.newPullParser();
+
+        InputStream in = Bunyan.class.getClassLoader().getResourceAsStream(BUNYAN_CONFIG);
+        xpp.setInput(new InputStreamReader(in));
+        int eventType = xpp.getEventType();
+
+        while (eventType != XmlPullParser.END_DOCUMENT) {
+            if (eventType == XmlPullParser.START_TAG) {
+                String name = xpp.getName();
+                if (XML_LOGGER.equals(name)) {
+                    String levelName = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
+                    Level level = Level.parse(levelName);
+                    if (level == null) {
+                        Log.e(TAG, "Invalid level specified: " + levelName);
+                        continue;
+                    }
+
+                    String className = xpp.getAttributeValue(null, XML_ATTR_CLASS);
+                    if (TextUtils.isEmpty(className)) {
+                        Log.e(TAG, "Invalid class specified: " + className);
+                        continue;
+                    }
+
+                    sClassThresholds.put(className, level);
+                } else if (XML_GLOBAL.equals(name)) {
+                    String levelName = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
+                    Level level = Level.parse(levelName);
+                    if (level == null) {
+                        Log.e(TAG, "Invalid level specified: " + levelName);
+                        continue;
+                    }
+
+                    String styleName = xpp.getAttributeValue(null, XML_ATTR_TAGSTYLE);
+                    TagStyle style = TagStyle.parse(styleName);
+                    if (style == null) {
+                        Log.e(TAG, "Invalid style specified: " + styleName);
+                        continue;
+                    }
+
+                    sGlobalThreshold = level;
+                    sTagStyle = style;
+                }
+            }
+
+            eventType = xpp.next();
+        }
+    }
 
     @NonNull
-    static Level getThreshold(@NonNull Class c) {
-        if (sClassThresholds.containsKey(c)) {
-            return sClassThresholds.get(c);
+    static Level getThreshold(@NonNull String className) {
+        if (sClassThresholds.containsKey(className)) {
+            return sClassThresholds.get(className);
         } else {
             return sGlobalThreshold;
         }
@@ -72,10 +165,6 @@ public final class Bunyan {
     @NonNull
     static TagStyle getTagStyle() {
         return sTagStyle;
-    }
-
-    public static void setClassThreshold(@NonNull Class clazz, @NonNull Level level) {
-        sClassThresholds.put(clazz, level);
     }
 
     public static void addLogger(@NonNull BunyanLogger logger) {
@@ -87,9 +176,9 @@ public final class Bunyan {
     }
 
     static void logEvent(@NonNull Level level,
-                                @NonNull String name,
-                                @Nullable String message,
-                                @Nullable Throwable t) {
+                         @NonNull String name,
+                         @Nullable String message,
+                         @Nullable Throwable t) {
         if (message == null) {
             // Not logging a null message. That would be stupid.
             return;
@@ -123,10 +212,8 @@ public final class Bunyan {
     }
 
     @NonNull
-    public static String getLoggerName(@NonNull Class clazz) {
-        String className = clazz.getName();
-
-        switch (Bunyan.getTagStyle()) {
+    static String getLoggerName(@NonNull String className) {
+        switch (sTagStyle) {
             case RESTRICTED:
             case SHORT:
             default:
