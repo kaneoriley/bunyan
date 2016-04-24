@@ -16,18 +16,21 @@
 
 package me.oriley.bunyan;
 
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import dalvik.system.BaseDexClassLoader;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.lang.reflect.Field;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class Bunyan {
@@ -43,6 +46,14 @@ public final class Bunyan {
 
     private static final String XML_GLOBAL = "global";
     private static final String XML_LOGGER = "logger";
+
+    // Constants for finding zip file name via reflection. Facebook makes this relatively safe, google it ;)
+    private static final String ORIGINAL_PATH = "originalPath";
+    private static final String DEX_ELEMENTS = "dexElements";
+    private static final String PATH_LIST = "pathList";
+    private static final String DEX_PATH_LIST_CLASS_NAME = "dalvik.system.DexPathList";
+    private static final String DEX_PATH_LIST_ELEMENT_CLASS_NAME = "dalvik.system.DexPathList$Element";
+    private static final String ZIP = "zip";
 
     @NonNull
     private static final List<BunyanLogger> sLoggers = new ArrayList<>();
@@ -107,8 +118,16 @@ public final class Bunyan {
         factory.setNamespaceAware(true);
         XmlPullParser xpp = factory.newPullParser();
 
-        InputStream in = Bunyan.class.getClassLoader().getResourceAsStream(BUNYAN_CONFIG);
-        xpp.setInput(new InputStreamReader(in));
+        InputStream inputStream = getZipInputStream();
+        if (inputStream == null) {
+            // Not ideal, see http://blog.danlew.net/2013/08/20/joda_time_s_memory_issue_in_android/
+            inputStream = Bunyan.class.getClassLoader().getResourceAsStream(BUNYAN_CONFIG);
+            Log.w(TAG, "Using getResourceAsStream: " + inputStream);
+        } else {
+            Log.d(TAG, "Using zipInputStream: " + inputStream);
+        }
+
+        xpp.setInput(new InputStreamReader(inputStream));
         int eventType = xpp.getEventType();
 
         while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -150,6 +169,85 @@ public final class Bunyan {
             }
 
             eventType = xpp.next();
+        }
+
+        closeQuietly(inputStream);
+    }
+
+    /*
+     * Try to find zip path so we don't need to rely on using ClassLoader.getResourceAsStream()
+     *
+     * Saves memory by not exposing us to the leak described here: http://blog.danlew.net/2013/08/20/joda_time_s_memory_issue_in_android/
+     *
+     * Reflection is always ugly but I haven't seen this one fail, and the fields we are accessing are luckily
+     * the same as what Facebook reflect on, which in the past has proven enough of a reason for the Android engineers
+     * not to change things too much (they once reverted a field name because Facebook were reflecting on it and they
+     * didn't want it to crash lol).
+     *
+     */
+    @Nullable
+    private static InputStream getZipInputStream() {
+        ClassLoader cl = Bunyan.class.getClassLoader();
+        ZipFile zipFile = null;
+
+        try {
+            if (!(cl instanceof BaseDexClassLoader)) {
+                Log.w(TAG, "ClassLoader was invalid class: " + cl);
+                return null;
+            }
+
+            BaseDexClassLoader dx = (BaseDexClassLoader) cl;
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                String originalPath = getFieldValue(BaseDexClassLoader.class, dx, ORIGINAL_PATH);
+                if (originalPath != null) {
+                    zipFile = new ZipFile(originalPath);
+                } else {
+                    Log.w(TAG, "Unable to retrieve originalPath");
+                }
+            } else {
+                Class dexPathListClass = getClassForName(DEX_PATH_LIST_CLASS_NAME);
+                if (dexPathListClass == null) {
+                    Log.w(TAG, "Unable to retrieve DexPathList class");
+                    return null;
+                }
+
+                Class elementClass = getClassForName(DEX_PATH_LIST_ELEMENT_CLASS_NAME);
+                if (elementClass == null) {
+                    Log.w(TAG, "Unable to retrieve DexPathList$Element class");
+                    return null;
+                }
+
+                Object dexPathList = getFieldValue(BaseDexClassLoader.class, dx, PATH_LIST);
+                Object[] elementArray = null;
+                if (dexPathList != null) {
+                    elementArray = getFieldValue(dexPathListClass, dexPathList, DEX_ELEMENTS);
+                }
+
+                if (elementArray == null || elementArray.length <= 0) {
+                    Log.w(TAG, "Element array is invalid: " + Arrays.toString(elementArray));
+                    return null;
+                }
+
+                for (Object object : elementArray) {
+                    File file = getFieldValue(elementClass, object, ZIP);
+                    if (file != null) {
+                        zipFile = new ZipFile(file);
+                        break;
+                    }
+                }
+            }
+
+            if (zipFile != null) {
+                ZipEntry entry = zipFile.getEntry(BUNYAN_CONFIG);
+                return zipFile.getInputStream(entry);
+            } else {
+                Log.e(TAG, "Unable to find ZipFile");
+                return null;
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "Error retrieving input stream zip file", t);
+            closeQuietly(zipFile);
+            return null;
         }
     }
 
@@ -223,4 +321,43 @@ public final class Bunyan {
                 return className;
         }
     }
+
+    // region Utils
+
+    @Nullable
+    private static Class getClassForName(@NonNull String className) {
+        try {
+            return Class.forName(className);
+        } catch (Throwable t) {
+            Log.e(TAG, "Class " + className + " not found");
+            return null;
+        }
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    private static <T> T getFieldValue(@NonNull Class<?> clazz,
+                                       @Nullable Object obj,
+                                       @NonNull String fieldName) {
+        try {
+            Field field = clazz.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return (T) field.get(obj);
+        } catch (Throwable t) {
+            Log.e(TAG, "error retrieving field " + fieldName + " from class " + clazz, t);
+            return null;
+        }
+    }
+
+    private static void closeQuietly(@Nullable Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                // Ignored
+            }
+        }
+    }
+
+    // endregion Utils
 }
