@@ -1,5 +1,11 @@
-[![Release](https://jitpack.io/v/com.github.oriley-me/bunyan.svg)](https://jitpack.io/#com.github.oriley-me/bunyan) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan) [![Dependency Status](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b/badge.svg?style=flat)](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b)
-<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-core%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 133 | deps: 20 | size: 13 KB-f44336.svg"></img></a> <a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-lombok%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 11 | deps: 153 | size: 3 KB-f44336.svg"></img></a>
+[![Release](https://jitpack.io/v/com.github.oriley-me/bunyan.svg)](https://jitpack.io/#com.github.oriley-me/bunyan)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+[![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan)
+[![Dependency Status](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b/badge.svg?style=flat)](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b)
+
+<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-core%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 139 | deps: 20 | size: 18 KB-f44336.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-crashlytics%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-lombok%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 6 | additional deps: 0 | size: 2 KB-ff9800.svg"></img></a>  
 
 # Bunyan
 ![Logo](artwork/icon.png)
