@@ -193,13 +193,13 @@ repositories {
 ```gradle
 dependencies {
     // Required
-    compile 'me.oriley.bunyan:bunyan-core:0.3.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-core:0.3.0'
 
     // Only necessary if you plan on using a BunyanCrashlyticsLogger
-    compile 'me.oriley.bunyan:bunyan-crashlytics:0.3.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.3.0'
 
     // Only necessary to take advantage of Lombok's @Slf4j annotations
-    compile 'me.oriley.bunyan:bunyan-lombok:0.3.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-lombok:0.3.0'
 }
 ```
 
