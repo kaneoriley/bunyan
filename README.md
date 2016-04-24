@@ -57,7 +57,7 @@ There are 5 values for logging threshold `Level`:
  * DEBUG:  Threshold for `android.util.Log.DEBUG` / `log.debug()`
  * TRACE:  Threshold for `android.util.Log.VERBOSE` / `log.trace()`
 
-Any logs with a lower priority than the value passed to `setThreshold()` will not be passed along to any appenders.
+Any logs with a lower priority than the value passed to `init()` will not be passed along to any appenders.
 
 There are 4 values for `TagStyle`:
 
@@ -116,7 +116,7 @@ static {
 }
 ```
 
-# Custom Loggers
+## Custom Loggers
 
 You also have the option of adding your own custom loggers for capturing logs to send to your analytics platform of
 choice. Simply implement the `BunyanLogger` interface and handle log events as required. You will also need to add
@@ -131,7 +131,7 @@ static {
 }
 ```
 
-# Usage
+## Usage
 
 There are two methods for using Bunyan, depending on whether you use [Project Lombok](https://projectlombok.org/) and like
 to take advantage of the `@Slf4j` annotation. This requires an extra dependency (listed below) in order to create a shim
@@ -172,7 +172,7 @@ public void myMethod(int value) {
 }
 ```
 
-# Gradle Dependency
+## Gradle Dependency
 
  * Add JitPack.io to your repositories list in the root projects build.gradle:
 
