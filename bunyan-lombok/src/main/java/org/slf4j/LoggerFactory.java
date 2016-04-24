@@ -18,11 +18,6 @@ package org.slf4j;
 
 import android.support.annotation.NonNull;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
-import static me.oriley.bunyan.Bunyan.getLoggerName;
-
 /*
  * Shim class to hook into Lombok's @Slf4j annotation and provide a BunyanLogger
  */
@@ -30,16 +25,7 @@ import static me.oriley.bunyan.Bunyan.getLoggerName;
 public final class LoggerFactory {
 
     @NonNull
-    private static final ConcurrentMap<Class, Logger> mLoggerMap = new ConcurrentHashMap<>();
-
-    @NonNull
     public static Logger getLogger(@NonNull Class<?> c) {
-        Logger logger = mLoggerMap.get(c);
-        if (logger == null) {
-            Logger newLogger = new Logger(c);
-            Logger oldLogger = mLoggerMap.putIfAbsent(c, newLogger);
-            logger = oldLogger == null ? newLogger : oldLogger;
-        }
-        return logger;
+        return new Logger(c);
     }
 }

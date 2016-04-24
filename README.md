@@ -156,7 +156,7 @@ If you don't use Project Lombok, you will need to create a field in each class w
 ```java
 public class MyClass {
 
-    private static final BunyanCoreLogger log = BunyanLoggerFactory.getLogger(MyClass.class);
+    private static final BunyanCoreLogger log = new BunyanCoreLogger(MyClass.class);
 
 }
 ```
