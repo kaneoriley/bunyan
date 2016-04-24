@@ -3,9 +3,9 @@
 [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan)
 [![Dependency Status](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b/badge.svg?style=flat)](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b)
 
-<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-core%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 139 | deps: 20 | size: 18 KB-f44336.svg"></img></a>  
-<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-crashlytics%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>  
-<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-lombok%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 6 | additional deps: 0 | size: 2 KB-ff9800.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-core%3A0.3.1"><img src="https://img.shields.io/badge/bunyan_core-methods: 143 | deps: 20 | size: 18 KB-f44336.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-crashlytics%3A0.3.1"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-lombok%3A0.3.1"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 6 | additional deps: 0 | size: 2 KB-ff9800.svg"></img></a>  
 
 # Bunyan
 ![Logo](artwork/icon.png)
@@ -193,13 +193,13 @@ repositories {
 ```gradle
 dependencies {
     // Required
-    compile 'com.github.oriley-me.bunyan:bunyan-core:0.3.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-core:0.3.1'
 
     // Only necessary if you plan on using a BunyanCrashlyticsLogger
-    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.3.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.3.1'
 
     // Only necessary to take advantage of Lombok's @Slf4j annotations
-    compile 'com.github.oriley-me.bunyan:bunyan-lombok:0.3.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-lombok:0.3.1'
 }
 ```
 

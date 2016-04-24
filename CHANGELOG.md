@@ -1,11 +1,12 @@
 Change Log
 ==========
 
-## Version 0.3.1 WIP
+## Version 0.3.1
+
+_2016-04-25_
 
  *  Avoid using getResourceAsStream if possible (see http://blog.danlew.net/2013/08/20/joda_time_s_memory_issue_in_android/)
     (Incidentally, the library I made this to replace was using it so this is another thing that's been improved on)
- *  
 
 ## Version 0.3.0
 
