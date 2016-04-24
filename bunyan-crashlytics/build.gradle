@@ -3,4 +3,7 @@ applyLibraryConfig(this)
 //noinspection GroovyAssignabilityCheck
 dependencies {
     compile project(':bunyan-core')
+
+    // Crashlytics
+    provided 'com.crashlytics.sdk.android:crashlytics:2.5.5'
 }

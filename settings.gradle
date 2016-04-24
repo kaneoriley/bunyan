@@ -1,1 +1,1 @@
-include ':bunyan-core', ':bunyan-lombok'
+include ':bunyan-core', ':bunyan-lombok', ':bunyan-crashlytics'

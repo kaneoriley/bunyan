@@ -1,49 +1,51 @@
-[![Release](https://jitpack.io/v/com.github.oriley-me/bunyan.svg)](https://jitpack.io/#com.github.oriley-me/bunyan) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan) [![Dependency Status](https://www.versioneye.com/user/projects/56b6a5840a0ff50035ba881d/badge.svg?style=flat)](https://www.versioneye.com/user/projects/56b6a5840a0ff50035ba881d)
-<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-core%3A0.2.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 133 | deps: 20 | size: 13 KB-f44336.svg"></img></a> <a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-lombok%3A0.2.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 11 | deps: 153 | size: 3 KB-f44336.svg"></img></a>
+[![Release](https://jitpack.io/v/com.github.oriley-me/bunyan.svg)](https://jitpack.io/#com.github.oriley-me/bunyan) [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan) [![Dependency Status](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b/badge.svg?style=flat)](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b)
+<a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-core%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 133 | deps: 20 | size: 13 KB-f44336.svg"></img></a> <a href="http://www.methodscount.com/?lib=me.oriley.bunyan%3Abunyan-lombok%3A0.3.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 11 | deps: 153 | size: 3 KB-f44336.svg"></img></a>
 
 # Bunyan
 ![Logo](artwork/icon.png)
 
-Logger factory with SLF4J message formatting, and support for custom logger extensions.
+Logger factory with SLF4J message formatting, and support for custom logger extensions, without using any external
+dependencies.
+
+## Why?
+
+I wanted to have the convenience and performance benefits of the SLF4J logging interface, without the overhead of
+including the SLF4J dependency (500+ methods), and a third party wrapper (1000+). So I replicated the basic
+functionality here, in an extremely small dependency (look at the top of the page for sizes/method counts).
+
+Consider the following `Log` statement:
+
+```java
+Log.d("MyTag", "Value: " + value + ", Old Value: " + oldValue + ", Object: " + object.toString());
+```
+
+Using SLF4J/Bunyan, this could be rewritten as:
+```java
+log.debug("Value: {}, Old Value: {}, Object: {}", value, oldValue, object);
+```
+
+This results in no String concatenation being necessary until after we have checked whether the log is within the set
+threshold level, resulting in less Object allocation, faster execution, and lower memory consumption.
+
+Check out [this SLF4j documentation](http://www.slf4j.org/faq.html#logging_performance) for a more thorough explanation.
 
 ## Initialisation
 
-Bunyan is designed to provide an SLF4J style logging API without required massive dependencies like most other libraries.
-It also includes an easy to use interface for adding custom loggers, to hook into whatever analytics package you use.
-Included are two sample loggers, that you will need to add to `Bunyan` manually in a static block inside your
-`Application` class like so:
+You must initialise Bunyan manually in a static block inside your `Application` class like so:
 
 ```java
 static {
-    // For outputting to Logcat
-    Bunyan.addLogger(new BunyanLogcatLogger());
+    // Initialise Bunyan (these are the default values)
+    Bunyan.init(Level.INFO, TagStyle.SHORT);
 
-    // For Crashlytics logging (if you have the Crashlytics library included in your application)
-    Bunyan.addLogger(new BunyanCrashlyticsLogger(Crashlytics.class));
-
-    // The addLogger method accepts a varargs array of loggers, so you can include multiple in the same call:
-    Bunyan.addLogger(new BunyanLogcatLogger(), new BunyanCrashlyticsLogger(Crashlytics.class));
-}
-```
-
-No loggers are automatically installed, so by default no logging will be done if you don't add any.
-
-Configuration options must also be setup inside the same static block:
-
-```java
-static {
-
-    ...
-
-    // Set the threshold logging level (more info below). Here is my suggested configuration (defaults to INFO).
-    Bunyan.setThreshold(BuildConfig.DEBUG ? Level.DEBUG : Level.INFO);
-
-    // Set the desired style of the log tags (more info below). Here is a suggested configuration (defaults to SHORT).
-    Bunyan.setTagStyle(BuildConfig.DEBUG ? TagStyle.FULL : TagStyle.SHORT);
-
-    // Set whether to log any exceptions passed to log.error() to Crashlytics as Non-Fatals. Defaults to false.
-    // Has no effect if your application does not include Crashlytics.
-    Bunyan.setLogExceptionsToCrashlytics(true);
+    // Alternate initialisation for different build types (this is my recommended configuration)
+    if (BuildConfig.DEBUG) {
+        // Debug build, allow more logging and use full class/method name in tag
+        Bunyan.init(Level.DEBUG, TagStyle.FULL);
+    } else {
+        // Release build, reduce logging and use short tag for better performance
+        Bunyan.init(Level.INFO, TagStyle.SHORT);
+    }
 }
 ```
 
@@ -68,6 +70,52 @@ There are 4 values for `TagStyle`:
  performance. This is why I would suggest only using FULL on debug builds, or passing in the method name as part of
  the message instead if necessary.
 
+
+Included are two sample loggers, that you will need to add to Bunyan manually inside the static initialisation block.
+
+#### BunyanLogcatLogger
+
+Takes no arguments and appends all logs to Logcat. This should be used unless you have implemented your own logger
+to handle this.
+
+```java
+static {
+
+    ...
+
+    Bunyan.addLogger(new BunyanLogcatLogger());
+}
+```
+
+#### BunyanCrashlyticsLogger
+
+Note: Requires an extra dependency (listed in the dependency section below)
+
+Takes 2 arguments. The first is `Crashlytics.class`, to prevent instantiation in projects where Crashlytics is not
+available as it is not included as a compile dependency in Bunyan. The second parameter tells the logger whether any
+logged exceptions should be sent to Crashlytics as a Non-Fatal (defaults to false).
+
+```java
+static {
+
+    ...
+
+    Bunyan.addLogger(new BunyanCrashlyticsLogger(Crashlytics.class, true));
+}
+```
+
+No loggers are automatically installed, so by default no logging will be done if you don't add any. There is also an
+`addLoggers` method that takes a varargs array, so you could simplify the above to:
+
+```java
+static {
+
+    ...
+
+    Bunyan.addLoggers(new BunyanLogcatLogger(), new BunyanCrashlyticsLogger(Crashlytics.class, true));
+}
+```
+
 # Custom Loggers
 
 You also have the option of adding your own custom loggers for capturing logs to send to your analytics platform of
@@ -77,7 +125,6 @@ the logger to Bunyan inside the static initialisation block like so:
 ```java
 static {
 
-    // Other Bunyan configuration
     ...
 
     Bunyan.addLogger(new MyAnalyticsLogger()); // Where MyAnalyticsLogger is your custom class
@@ -100,7 +147,8 @@ public class MyClass {
 }
 ```
 
-If you do use Lombok, it will take care of the logger creation for you by adding a simple annotation:
+If you do use Lombok and include the extra dependency, it will take care of the logger creation for you
+by adding a simple annotation:
 
 ```java
 @Slf4j
@@ -124,10 +172,6 @@ public void myMethod(int value) {
 }
 ```
 
-Check out [this explanation](http://www.slf4j.org/faq.html#logging_performance) of why the SLF4J logging format (which
-I have reproduced in Bunyan) is much more efficient than standard logging, both in terms of code maintenance and runtime
-performance.
-
 # Gradle Dependency
 
  * Add JitPack.io to your repositories list in the root projects build.gradle:
@@ -143,10 +187,13 @@ repositories {
 ```gradle
 dependencies {
     // Required
-    compile 'me.oriley.bunyan:bunyan-core:0.2.0'
+    compile 'me.oriley.bunyan:bunyan-core:0.3.0'
+
+    // Only necessary if you plan on using a BunyanCrashlyticsLogger
+    compile 'me.oriley.bunyan:bunyan-crashlytics:0.3.0'
 
     // Only necessary to take advantage of Lombok's @Slf4j annotations
-    compile 'me.oriley.bunyan:bunyan-lombok:0.2.0'
+    compile 'me.oriley.bunyan:bunyan-lombok:0.3.0'
 }
 ```
 

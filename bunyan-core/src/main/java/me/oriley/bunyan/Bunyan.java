@@ -47,47 +47,36 @@ public final class Bunyan {
     private static final List<BunyanLogger> sLoggers = new ArrayList<>();
 
     @NonNull
-    private static Level sLoggingLevel = Level.INFO;
+    private static Level sThreshold = Level.INFO;
 
     @NonNull
     private static TagStyle sTagStyle = TagStyle.SHORT;
 
-    private static boolean sLogExceptionsToCrashlytics;
 
-    public static boolean isLoggable(@NonNull Level level) {
-        return level.ordinal() <= sLoggingLevel.ordinal();
-    }
-
-    public static void setThreshold(@NonNull Level level) {
-        sLoggingLevel = level;
-    }
-
-    @NonNull
-    public static TagStyle getTagStyle() {
-        return sTagStyle;
-    }
-
-    public static void setTagStyle(@NonNull TagStyle tagStyle) {
+    public static void init(@NonNull Level threshold, @NonNull TagStyle tagStyle) {
+        sThreshold = threshold;
         sTagStyle = tagStyle;
     }
 
-    public static boolean isLogExceptionsToCrashlytics() {
-        return sLogExceptionsToCrashlytics;
+
+    static boolean isLoggable(@NonNull Level level) {
+        return level.ordinal() <= sThreshold.ordinal();
     }
 
-    public static void setLogExceptionsToCrashlytics(boolean logExceptionsToCrashlytics) {
-        sLogExceptionsToCrashlytics = logExceptionsToCrashlytics;
+    @NonNull
+    static TagStyle getTagStyle() {
+        return sTagStyle;
     }
 
     public static void addLogger(@NonNull BunyanLogger logger) {
         sLoggers.add(logger);
     }
 
-    public static void addLogger(@NonNull BunyanLogger... loggers) {
+    public static void addLoggers(@NonNull BunyanLogger... loggers) {
         Collections.addAll(sLoggers, loggers);
     }
 
-    public static void logEvent(@NonNull Level level,
+    static void logEvent(@NonNull Level level,
                                 @NonNull String name,
                                 @Nullable String message,
                                 @Nullable Throwable t) {

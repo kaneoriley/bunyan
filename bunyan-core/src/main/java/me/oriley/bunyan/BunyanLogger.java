@@ -19,7 +19,6 @@ package me.oriley.bunyan;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
 public interface BunyanLogger {
 
     void logEvent(@NonNull Bunyan.Level level,

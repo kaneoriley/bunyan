@@ -25,3 +25,26 @@ allprojects {
     group = 'me.oriley.bunyan'
     version = 'LOCAL-SNAPSHOT'
 }
+
+def applyLibraryConfig(context) {
+    context.apply plugin: 'com.android.library'
+    context.apply plugin: 'com.github.dcendents.android-maven'
+
+    context.android {
+        compileSdkVersion 23
+        buildToolsVersion "23.0.3"
+
+        defaultConfig {
+            minSdkVersion 15
+        }
+
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_7
+            targetCompatibility JavaVersion.VERSION_1_7
+        }
+
+        lintOptions {
+            abortOnError false
+        }
+    }
+}
