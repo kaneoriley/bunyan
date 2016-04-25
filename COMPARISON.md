@@ -40,5 +40,14 @@ The results were as follows (all figures are the execution time in milliseconds)
     | 6.0.0   | 356, 379, 410, 483, 420  | 256, 271, 276, 307, 266 |
     | 6.0.0   | 396, 387, 502, 493, 469  | 296, 274, 291, 295, 249 |
 
+And heres a quick comparison of the method counts and dex sizes:
+
+    |                | Logback 1.1.1-5   | Bunyan 0.4.0   |
+    |----------------| ------------------|----------------|
+    | Core           | 2716 (287KB)      | 123 (17KB)     |
+    | Dependencies   | 582 (48KB)        | 20 (7KB)       |
+    |----------------| ------------------|----------------|
+    | Total          | 3298 (335KB)      | 143 (24KB)     |
+
 Make of this what you will, but I wanted to demonstrate that if fast, simple logging is what you're after, maybe give
 Bunyan a go before moving on to one of the fully fledged SLF4J loggers.
