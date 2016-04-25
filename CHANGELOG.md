@@ -10,6 +10,7 @@ Change Log
  *  Fix log output when a single array is passed as an argument (previously, and in other libraries, it would only log
     the first entry due to the varargs method).
  *  Simplify message formatter and reduce method count.
+ *  Add support for Log.ASSERT/log.wtf level
 
 ## Version 0.3.1
 

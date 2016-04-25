@@ -118,6 +118,22 @@ public class BunyanCoreLogger {
 
     // endregion ERROR
 
+    // region ASSERT
+
+    public void wtf(String msg) {
+        log(Log.ASSERT, msg, (Throwable) null);
+    }
+
+    public void wtf(String format, Object... argArray) {
+        log(Log.ASSERT, format, argArray);
+    }
+
+    public void wtf(String msg, Throwable t) {
+        log(Log.ASSERT, msg, t);
+    }
+
+    // endregion ASSERT
+
     private void log(@Level int level, @Nullable String format, @Nullable Object... argArray) {
         if (isLoggable(level)) {
             FormattingPair ft = MessageFormatter.formatArray(format, argArray);
