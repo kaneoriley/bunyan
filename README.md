@@ -203,6 +203,10 @@ dependencies {
 }
 ```
 
+## Benchmark Comparison
+
+Have a look at [COMPARISON.md](COMPARISON.md) for a quick benchmark comparison demonstrating the speed of Bunyan
+
 #### Note: Clash with org.slf4j:slf4j-api
 
 Due to Lombok requiring the factory to be a `org.slf4j.LoggerFactory` class, you cannot include `bunyan-lombok` in a
