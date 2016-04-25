@@ -38,14 +38,14 @@ public class BunyanCrashlyticsLogger implements BunyanLogger {
 
 
     @Override
-    public void logEvent(@NonNull Level level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+    public void logEvent(@Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
         Crashlytics crashlytics = Crashlytics.getInstance();
         if (crashlytics == null || crashlytics.core == null) {
             // Not initialised yet, don't attempt
             return;
         }
 
-        Crashlytics.log(formatLogMessage(level.priority, tag, message));
+        Crashlytics.log(formatLogMessage(level, tag, message));
         if (t != null && mLogExceptions) {
             Crashlytics.logException(t);
         }

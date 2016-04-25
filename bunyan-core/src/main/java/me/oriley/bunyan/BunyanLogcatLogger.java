@@ -35,7 +35,7 @@ public final class BunyanLogcatLogger implements BunyanLogger {
     private static final int MAX_TAG_LENGTH = 23;
 
     @Override
-    public void logEvent(@NonNull Level level,
+    public void logEvent(@Level int level,
                          @NonNull String tag,
                          @NonNull String message,
                          @Nullable Throwable t) {
@@ -43,7 +43,7 @@ public final class BunyanLogcatLogger implements BunyanLogger {
         tag = sanitiseTag(tag);
 
         if (message.length() < MAX_MSG_LENGTH) {
-            Log.println(level.priority, tag, message);
+            Log.println(level, tag, message);
         } else {
             for (int i = 0, length = message.length(); i < length; i++) {
                 int newline = message.indexOf('\n', i);
@@ -52,7 +52,7 @@ public final class BunyanLogcatLogger implements BunyanLogger {
                 while (i < newline) {
                     int end = Math.min(newline, i + MAX_MSG_LENGTH);
                     String part = message.substring(i, end);
-                    Log.println(level.priority, tag, part);
+                    Log.println(level, tag, part);
                     i = end;
                 }
             }
@@ -66,7 +66,7 @@ public final class BunyanLogcatLogger implements BunyanLogger {
     @NonNull
     private static String sanitiseTag(@NonNull String name) {
         int length = name.length();
-        if (length <= MAX_TAG_LENGTH || Bunyan.getTagStyle() != Bunyan.TagStyle.RESTRICTED) {
+        if (length <= MAX_TAG_LENGTH || Bunyan.getTagStyle() != Bunyan.TAG_STYLE_RESTRICTED) {
             return name;
         }
 

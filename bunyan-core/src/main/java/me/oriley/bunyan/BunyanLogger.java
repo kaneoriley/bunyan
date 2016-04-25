@@ -18,10 +18,11 @@ package me.oriley.bunyan;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import me.oriley.bunyan.Bunyan.Level;
 
 public interface BunyanLogger {
 
-    void logEvent(@NonNull Bunyan.Level level,
+    void logEvent(@Level int level,
                   @NonNull String tag,
                   @NonNull String message,
                   @Nullable Throwable t);

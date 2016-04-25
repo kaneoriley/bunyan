@@ -17,6 +17,7 @@
 package me.oriley.bunyan;
 
 import android.os.Build;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -27,6 +28,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.*;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -34,6 +37,19 @@ import java.util.zip.ZipFile;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class Bunyan {
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({Log.ASSERT, Log.ERROR, Log.WARN, Log.INFO, Log.DEBUG, Log.VERBOSE})
+    public @interface Level {}
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({TAG_STYLE_RESTRICTED, TAG_STYLE_SHORT, TAG_STYLE_LONG, TAG_STYLE_FULL})
+    public @interface TagStyle {}
+
+    public static final int TAG_STYLE_RESTRICTED = 0;
+    public static final int TAG_STYLE_SHORT = 1;
+    public static final int TAG_STYLE_LONG = 2;
+    public static final int TAG_STYLE_FULL = 3;
 
     private static final String TAG = Bunyan.class.getSimpleName();
 
@@ -55,55 +71,20 @@ public final class Bunyan {
     private static final String DEX_PATH_LIST_ELEMENT_CLASS_NAME = "dalvik.system.DexPathList$Element";
     private static final String ZIP = "zip";
 
+    private static final int INVALID = -1;
+
     @NonNull
     private static final List<BunyanLogger> sLoggers = new ArrayList<>();
 
     @NonNull
-    private static final Map<String, Level> sClassThresholds = new HashMap<>();
+    @Level
+    private static final Map<String, Integer> sClassThresholds = new HashMap<>();
 
-    @NonNull
-    private static Level sGlobalThreshold = Level.INFO;
+    @Level
+    private static int sGlobalThreshold = Log.INFO;
 
-    @NonNull
-    private static TagStyle sTagStyle = TagStyle.SHORT;
-
-    public enum Level {
-        ERROR(Log.ERROR), WARN(Log.WARN), INFO(Log.INFO), DEBUG(Log.DEBUG), TRACE(Log.VERBOSE);
-
-        public final int priority;
-
-        Level(int priority) {
-            this.priority = priority;
-        }
-
-        @Nullable
-        static Level parse(@Nullable String levelName) {
-            for (Level level : values()) {
-                if (level.name().equals(levelName)) {
-                    return level;
-                }
-            }
-
-            // Couldn't find
-            return null;
-        }
-    }
-
-    public enum TagStyle {
-        RESTRICTED, SHORT, LONG, FULL;
-
-        @Nullable
-        static TagStyle parse(@Nullable String styleName) {
-            for (TagStyle style : values()) {
-                if (style.name().equals(styleName)) {
-                    return style;
-                }
-            }
-
-            // Couldn't find
-            return null;
-        }
-    }
+    @TagStyle
+    private static int sTagStyle = TAG_STYLE_SHORT;
 
     static {
         try {
@@ -135,11 +116,7 @@ public final class Bunyan {
                 String name = xpp.getName();
                 if (XML_LOGGER.equals(name)) {
                     String levelName = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
-                    Level level = Level.parse(levelName);
-                    if (level == null) {
-                        Log.e(TAG, "Invalid level specified: " + levelName);
-                        continue;
-                    }
+                    int level = parseLevel(levelName);
 
                     String className = xpp.getAttributeValue(null, XML_ATTR_CLASS);
                     if (TextUtils.isEmpty(className)) {
@@ -150,18 +127,10 @@ public final class Bunyan {
                     sClassThresholds.put(className, level);
                 } else if (XML_GLOBAL.equals(name)) {
                     String levelName = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
-                    Level level = Level.parse(levelName);
-                    if (level == null) {
-                        Log.e(TAG, "Invalid level specified: " + levelName);
-                        continue;
-                    }
+                    int level = parseLevel(levelName);
 
                     String styleName = xpp.getAttributeValue(null, XML_ATTR_TAGSTYLE);
-                    TagStyle style = TagStyle.parse(styleName);
-                    if (style == null) {
-                        Log.e(TAG, "Invalid style specified: " + styleName);
-                        continue;
-                    }
+                    int style = parseTagStyle(styleName);
 
                     sGlobalThreshold = level;
                     sTagStyle = style;
@@ -251,17 +220,52 @@ public final class Bunyan {
         }
     }
 
-    @NonNull
-    static Level getThreshold(@NonNull String className) {
+    @Level
+    private static int parseLevel(@Nullable String level) {
+        if ("TRACE".equals(level)) {
+            return Log.VERBOSE;
+        } else if ("DEBUG".equals(level)) {
+            return Log.DEBUG;
+        } else if ("INFO".equals(level)) {
+            return Log.INFO;
+        } else if ("WARN".equals(level)) {
+            return Log.WARN;
+        } else if ("ERROR".equals(level)) {
+            return Log.ERROR;
+        } else {
+            Log.e(TAG, "Invalid level " + level + ", using default (INFO)");
+            return Log.INFO;
+        }
+    }
+
+    @TagStyle
+    private static int parseTagStyle(@Nullable String style) {
+        if ("RESTRICTED".equals(style)) {
+            return TAG_STYLE_RESTRICTED;
+        } else if ("SHORT".equals(style)) {
+            return TAG_STYLE_SHORT;
+        } else if ("LONG".equals(style)) {
+            return TAG_STYLE_LONG;
+        } else if ("FULL".equals(style)) {
+            return TAG_STYLE_FULL;
+        } else {
+            Log.e(TAG, "Invalid tag style " + style + ", using default (SHORT)");
+            return TAG_STYLE_SHORT;
+        }
+    }
+
+    @Level
+    static int getThreshold(@NonNull String className) {
         if (sClassThresholds.containsKey(className)) {
+            //noinspection ResourceType
             return sClassThresholds.get(className);
         } else {
             return sGlobalThreshold;
         }
     }
 
-    @NonNull
-    static TagStyle getTagStyle() {
+    @TagStyle
+    static int getTagStyle() {
         return sTagStyle;
     }
 
@@ -273,7 +277,7 @@ public final class Bunyan {
         Collections.addAll(sLoggers, loggers);
     }
 
-    static void logEvent(@NonNull Level level,
+    static void logEvent(@Level int level,
                          @NonNull String name,
                          @Nullable String message,
                          @Nullable Throwable t) {
@@ -284,7 +288,7 @@ public final class Bunyan {
 
         String methodName = "";
 
-        if (sTagStyle == TagStyle.FULL) {
+        if (sTagStyle == TAG_STYLE_FULL) {
             boolean foundLocalClass = false;
 
             StackTraceElement[] trace = Thread.currentThread().getStackTrace();
@@ -311,14 +315,10 @@ public final class Bunyan {
 
     @NonNull
     static String getLoggerName(@NonNull String className) {
-        switch (sTagStyle) {
-            case RESTRICTED:
-            case SHORT:
-            default:
-                return className.substring(className.lastIndexOf('.') + 1).trim();
-            case LONG:
-            case FULL:
-                return className;
+        if (sTagStyle >= TAG_STYLE_LONG) {
+            return className;
+        } else {
+            return className.substring(className.lastIndexOf('.') + 1).trim();
         }
     }
 

@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+## Version 0.4.0 WIP
+
+ *  Breaking API Change: `Bunyan.Level` is now an `IntDef` rather than an `enum`. This means any custom loggers will
+    need to be updated for the new parameter type. Also, as the raw values are in reverse order now due to using the
+    `android.util.Log` constants, any `level < threshold` or `level > threshold` parameters will need to switch
+    comparators.
+
 ## Version 0.3.1
 
 _2016-04-25_

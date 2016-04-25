@@ -18,13 +18,14 @@ package me.oriley.bunyan;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import me.oriley.bunyan.Bunyan.Level;
 
 @SuppressWarnings("unused")
 public class BunyanCoreLogger {
 
-    @NonNull
-    private final Level mThreshold;
+    @Level
+    private final int mThreshold;
 
     @NonNull
     private final String mName;
@@ -40,15 +41,15 @@ public class BunyanCoreLogger {
     // region TRACE
 
     public void trace(String msg) {
-        log(Level.TRACE, msg, (Throwable) null);
+        log(Log.VERBOSE, msg, (Throwable) null);
     }
 
     public void trace(String format, Object... argArray) {
-        log(Level.TRACE, format, argArray);
+        log(Log.VERBOSE, format, argArray);
     }
 
     public void trace(String msg, Throwable t) {
-        log(Level.TRACE, msg, t);
+        log(Log.VERBOSE, msg, t);
     }
 
     // endregion TRACE
@@ -56,15 +57,15 @@ public class BunyanCoreLogger {
     // region DEBUG
 
     public void debug(String msg) {
-        log(Level.DEBUG, msg, (Throwable) null);
+        log(Log.DEBUG, msg, (Throwable) null);
     }
 
     public void debug(String format, Object... argArray) {
-        log(Level.DEBUG, format, argArray);
+        log(Log.DEBUG, format, argArray);
     }
 
     public void debug(String msg, Throwable t) {
-        log(Level.DEBUG, msg, t);
+        log(Log.DEBUG, msg, t);
     }
 
     // endregion DEBUG
@@ -72,15 +73,15 @@ public class BunyanCoreLogger {
     // region INFO
 
     public void info(String msg) {
-        log(Level.INFO, msg, (Throwable) null);
+        log(Log.INFO, msg, (Throwable) null);
     }
 
     public void info(String format, Object... argArray) {
-        log(Level.INFO, format, argArray);
+        log(Log.INFO, format, argArray);
     }
 
     public void info(String msg, Throwable t) {
-        log(Level.INFO, msg, t);
+        log(Log.INFO, msg, t);
     }
 
     // endregion INFO
@@ -88,15 +89,15 @@ public class BunyanCoreLogger {
     // region WARN
 
     public void warn(String msg) {
-        log(Level.WARN, msg, (Throwable) null);
+        log(Log.WARN, msg, (Throwable) null);
     }
 
     public void warn(String format, Object... argArray) {
-        log(Level.WARN, format, argArray);
+        log(Log.WARN, format, argArray);
     }
 
     public void warn(String msg, Throwable t) {
-        log(Level.WARN, msg, t);
+        log(Log.WARN, msg, t);
     }
 
     // endregion WARN
@@ -104,33 +105,33 @@ public class BunyanCoreLogger {
     // region ERROR
 
     public void error(String msg) {
-        log(Level.ERROR, msg, (Throwable) null);
+        log(Log.ERROR, msg, (Throwable) null);
     }
 
     public void error(String format, Object... argArray) {
-        log(Level.ERROR, format, argArray);
+        log(Log.ERROR, format, argArray);
     }
 
     public void error(String msg, Throwable t) {
-        log(Level.ERROR, msg, t);
+        log(Log.ERROR, msg, t);
     }
 
     // endregion ERROR
 
-    private void log(@NonNull Level level, @Nullable String format, @Nullable Object... argArray) {
+    private void log(@Level int level, @Nullable String format, @Nullable Object... argArray) {
         if (isLoggable(level)) {
             FormattingPair ft = MessageFormatter.formatArray(format, argArray);
             Bunyan.logEvent(level, mName, ft.getMessage(), ft.getThrowable());
         }
     }
 
-    private void log(@NonNull Level level, @Nullable String message, @Nullable Throwable throwable) {
+    private void log(@Level int level, @Nullable String message, @Nullable Throwable throwable) {
         if (isLoggable(level)) {
             Bunyan.logEvent(level, mName, message, throwable);
         }
     }
 
-    private boolean isLoggable(@NonNull Level level) {
-        return level.ordinal() <= mThreshold.ordinal();
+    private boolean isLoggable(@Level int level) {
+        return level >= mThreshold;
     }
 }
