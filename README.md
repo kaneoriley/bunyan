@@ -210,6 +210,10 @@ dependencies {
 }
 ```
 
+If you would like to check out the latest development version, please substitute the versions for `develop-SNAPSHOT`.
+Keep in mind that it is very likely things could break or be unfinished, so stick the official releases if you want
+things to be more predictable.
+
 #### Note: Clash with org.slf4j:slf4j-api
 
 Due to Lombok requiring the factory to be a `org.slf4j.LoggerFactory` class, you cannot include `bunyan-lombok` in a
