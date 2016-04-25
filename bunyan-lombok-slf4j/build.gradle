@@ -1,0 +1,6 @@
+applyLibraryConfig(this)
+
+//noinspection GroovyAssignabilityCheck
+dependencies {
+    compile project(':bunyan-core')
+}
