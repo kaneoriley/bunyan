@@ -1,7 +1,9 @@
 Change Log
 ==========
 
-## Version 0.4.0 WIP
+## Version 0.4.0
+
+_2016-04-25_
 
  *  Breaking API Change: `Bunyan.Level` is now an `IntDef` rather than an `enum`. This means any custom loggers will
     need to be updated for the new parameter type. Also, as the raw values are in reverse order now due to using the

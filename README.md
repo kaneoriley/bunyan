@@ -3,9 +3,9 @@
 [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan)
 [![Dependency Status](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b/badge.svg?style=flat)](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b)
 
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-core%3A0.3.1"><img src="https://img.shields.io/badge/bunyan_core-methods: 143 | deps: 20 | size: 18 KB-f44336.svg"></img></a>  
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-crashlytics%3A0.3.1"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>  
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-lombok%3A0.3.1"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 6 | additional deps: 0 | size: 2 KB-ff9800.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-core%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 123 | deps: 20 | size: 17 KB-f44336.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-crashlytics%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-lombok%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 6 | additional deps: 0 | size: 2 KB-ff9800.svg"></img></a>  
 
 # Bunyan
 ![Logo](artwork/icon.png)
@@ -35,6 +35,12 @@ threshold level, resulting in less Object allocation, faster execution, and lowe
 
 Check out [this SLF4j documentation](http://www.slf4j.org/faq.html#logging_performance) for a more thorough explanation.
 
+## Benchmark Comparison
+
+Have a look at [COMPARISON.md](COMPARISON.md) for a quick benchmark comparison demonstrating the speed of Bunyan
+
+A short summary is that Bunyan is faster than the library I tested against.
+
 ## Configuration
 
 Bunyan requires you to add a `bunyan.xml` to your root `assets` folder, to read configuration details. If this file is
@@ -51,6 +57,7 @@ A basic configuration file is as follows:
 
 There are 5 acceptable values for logging threshold `level`:
 
+ * ASSERT:  Threshold for `android.util.Log.ASSERT` / `log.wtf()`
  * ERROR:  Threshold for `android.util.Log.ERROR` / `log.error()`
  * WARN:   Threshold for `android.util.Log.WARN` / `log.warn()`
  * INFO:   Threshold for `android.util.Log.INFO` / `log.info()`
@@ -193,19 +200,15 @@ repositories {
 ```gradle
 dependencies {
     // Required
-    compile 'com.github.oriley-me.bunyan:bunyan-core:0.3.1'
+    compile 'com.github.oriley-me.bunyan:bunyan-core:0.4.0'
 
     // Only necessary if you plan on using a BunyanCrashlyticsLogger
-    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.3.1'
+    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.4.0'
 
     // Only necessary to take advantage of Lombok's @Slf4j annotations
-    compile 'com.github.oriley-me.bunyan:bunyan-lombok:0.3.1'
+    compile 'com.github.oriley-me.bunyan:bunyan-lombok:0.4.0'
 }
 ```
-
-## Benchmark Comparison
-
-Have a look at [COMPARISON.md](COMPARISON.md) for a quick benchmark comparison demonstrating the speed of Bunyan
 
 #### Note: Clash with org.slf4j:slf4j-api
 
