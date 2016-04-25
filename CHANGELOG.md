@@ -7,6 +7,9 @@ Change Log
     need to be updated for the new parameter type. Also, as the raw values are in reverse order now due to using the
     `android.util.Log` constants, any `level < threshold` or `level > threshold` parameters will need to switch
     comparators.
+ *  Fix log output when a single array is passed as an argument (previously, and in other libraries, it would only log
+    the first entry due to the varargs method).
+ *  Simplify message formatter and reduce method count.
 
 ## Version 0.3.1
 

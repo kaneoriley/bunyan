@@ -121,7 +121,7 @@ public class BunyanCoreLogger {
     private void log(@Level int level, @Nullable String format, @Nullable Object... argArray) {
         if (isLoggable(level)) {
             FormattingPair ft = MessageFormatter.formatArray(format, argArray);
-            Bunyan.logEvent(level, mName, ft.getMessage(), ft.getThrowable());
+            Bunyan.logEvent(level, mName, ft.message, ft.throwable);
         }
     }
 

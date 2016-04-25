@@ -2,30 +2,21 @@ package me.oriley.bunyan;
 
 import android.support.annotation.Nullable;
 
+@SuppressWarnings("WeakerAccess")
 final class FormattingPair {
 
     @Nullable
-    private final String mMessage;
+    public final String message;
 
     @Nullable
-    private final Throwable mThrowable;
+    public final Throwable throwable;
 
     FormattingPair(String message) {
         this(message, null);
     }
 
     FormattingPair(@Nullable String message, @Nullable Throwable throwable) {
-        mMessage = message;
-        mThrowable = throwable;
-    }
-
-    @Nullable
-    String getMessage() {
-        return mMessage;
-    }
-
-    @Nullable
-    Throwable getThrowable() {
-        return mThrowable;
+        this.message = message;
+        this.throwable = throwable;
     }
 }

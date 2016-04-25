@@ -3,41 +3,31 @@ package me.oriley.bunyan;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 final class MessageFormatter {
 
+    private static final String PLACEHOLDER = "{}";
+
     @NonNull
     static FormattingPair formatArray(@Nullable String messagePattern, @Nullable Object[] argArray) {
-        Throwable throwableCandidate = getThrowableCandidate(argArray);
+        Throwable throwable = null;
         Object[] args = argArray;
-        if (throwableCandidate != null) {
-            args = trimmedCopy(argArray);
-        }
 
-        return formatArray(messagePattern, args, throwableCandidate);
-    }
-
-    private static Throwable getThrowableCandidate(@Nullable Object[] argArray) {
         if (argArray != null && argArray.length != 0) {
             Object lastEntry = argArray[argArray.length - 1];
-            return lastEntry instanceof Throwable ? (Throwable) lastEntry : null;
-        } else {
-            return null;
-        }
-    }
 
-    @NonNull
-    private static Object[] trimmedCopy(@Nullable Object[] argArray) {
-        if (argArray != null && argArray.length != 0) {
-            int trimmedLength = argArray.length - 1;
-            Object[] trimmed = new Object[trimmedLength];
-            System.arraycopy(argArray, 0, trimmed, 0, trimmedLength);
-            return trimmed;
-        } else {
-            throw new IllegalStateException("non-sensical empty or null argument array");
+            if (lastEntry instanceof Throwable) {
+                throwable = (Throwable) lastEntry;
+
+                // Trim the array
+                int trimmedLength = argArray.length - 1;
+                args = new Object[trimmedLength];
+                System.arraycopy(argArray, 0, args, 0, trimmedLength);
+            }
         }
+
+        return formatArray(messagePattern, args, throwable);
     }
 
     @NonNull
@@ -50,8 +40,25 @@ final class MessageFormatter {
             int i = 0;
             StringBuilder sbuf = new StringBuilder(messagePattern.length() + 50);
 
+            int placeholderCount = 0;
+            while (i < messagePattern.length()) {
+                int j = messagePattern.indexOf(PLACEHOLDER, i);
+                if (j > 0) {
+                    placeholderCount++;
+                    i = j + 1;
+                } else {
+                    break;
+                }
+            }
+
+            if (placeholderCount == 1 && arguments.length > 1) {
+                // Passed an array as the only argument, so wrap it for correct expansion
+                arguments = new Object[] { arguments };
+            }
+
+            i = 0;
             for (int L = 0; L < arguments.length; ++L) {
-                int j = messagePattern.indexOf("{}", i);
+                int j = messagePattern.indexOf(PLACEHOLDER, i);
                 if (j == -1) {
                     if (i == 0) {
                         return new FormattingPair(messagePattern, t);
@@ -61,20 +68,22 @@ final class MessageFormatter {
                     return new FormattingPair(sbuf.toString(), t);
                 }
 
-                if (isEscapedDelimeter(messagePattern, j)) {
-                    if (!isDoubleEscaped(messagePattern, j)) {
+                // Check whether character is escape delimiter
+                if (j != 0 && messagePattern.charAt(j - 1) == 92) {
+                    // Check whether it is double escaped
+                    if (j >= 2 && messagePattern.charAt(j - 2) == 92) {
                         --L;
                         sbuf.append(messagePattern, i, j - 1);
                         sbuf.append('{');
                         i = j + 1;
                     } else {
                         sbuf.append(messagePattern, i, j - 1);
-                        deeplyAppendParameter(sbuf, arguments[L], new HashMap<Object[], Object>());
+                        deeplyAppendParameter(sbuf, arguments[L]);
                         i = j + 2;
                     }
                 } else {
                     sbuf.append(messagePattern, i, j);
-                    deeplyAppendParameter(sbuf, arguments[L], new HashMap<Object[], Object>());
+                    deeplyAppendParameter(sbuf, arguments[L]);
                     i = j + 2;
                 }
             }
@@ -84,43 +93,14 @@ final class MessageFormatter {
         }
     }
 
-    private static boolean isEscapedDelimeter(@NonNull String messagePattern, int delimeterStartIndex) {
-        if (delimeterStartIndex == 0) {
-            return false;
-        } else {
-            char potentialEscape = messagePattern.charAt(delimeterStartIndex - 1);
-            return potentialEscape == 92;
-        }
-    }
-
-    private static boolean isDoubleEscaped(@NonNull String messagePattern, int delimeterStartIndex) {
-        return delimeterStartIndex >= 2 && messagePattern.charAt(delimeterStartIndex - 2) == 92;
-    }
-
-    private static void deeplyAppendParameter(@NonNull StringBuilder sbuf, @Nullable Object o, @NonNull Map<Object[], Object> seenMap) {
+    private static void deeplyAppendParameter(@NonNull StringBuilder sbuf, @Nullable Object o) {
         if (o == null) {
             sbuf.append("null");
         } else {
             if (!o.getClass().isArray()) {
                 safeObjectAppend(sbuf, o);
-            } else if (o instanceof boolean[]) {
-                booleanArrayAppend(sbuf, (boolean[]) o);
-            } else if (o instanceof byte[]) {
-                byteArrayAppend(sbuf, (byte[]) o);
-            } else if (o instanceof char[]) {
-                charArrayAppend(sbuf, (char[]) o);
-            } else if (o instanceof short[]) {
-                shortArrayAppend(sbuf, (short[]) o);
-            } else if (o instanceof int[]) {
-                intArrayAppend(sbuf, (int[]) o);
-            } else if (o instanceof long[]) {
-                longArrayAppend(sbuf, (long[]) o);
-            } else if (o instanceof float[]) {
-                floatArrayAppend(sbuf, (float[]) o);
-            } else if (o instanceof double[]) {
-                doubleArrayAppend(sbuf, (double[]) o);
             } else {
-                objectArrayAppend(sbuf, (Object[]) o, seenMap);
+                safeObjectAppend(sbuf, Arrays.deepToString((Object[]) o));
             }
         }
     }
@@ -135,121 +115,5 @@ final class MessageFormatter {
             t.printStackTrace();
             sbuf.append("[FAILED toString()]");
         }
-    }
-
-    private static void objectArrayAppend(@NonNull StringBuilder sbuf, @NonNull Object[] a, @NonNull Map<Object[], Object> seenMap) {
-        sbuf.append('[');
-        if (!seenMap.containsKey(a)) {
-            seenMap.put(a, null);
-            int len = a.length;
-            for (int i = 0; i < len; ++i) {
-                deeplyAppendParameter(sbuf, a[i], seenMap);
-                if (i != len - 1) {
-                    sbuf.append(", ");
-                }
-            }
-            seenMap.remove(a);
-        } else {
-            sbuf.append("...");
-        }
-        sbuf.append(']');
-    }
-
-    private static void booleanArrayAppend(@NonNull StringBuilder sbuf, @NonNull boolean[] a) {
-        sbuf.append('[');
-        int len = a.length;
-
-        for (int i = 0; i < len; ++i) {
-            sbuf.append(a[i]);
-            if (i != len - 1) {
-                sbuf.append(", ");
-            }
-        }
-
-        sbuf.append(']');
-    }
-
-    private static void byteArrayAppend(@NonNull StringBuilder sbuf, @NonNull byte[] a) {
-        sbuf.append('[');
-        int len = a.length;
-        for (int i = 0; i < len; ++i) {
-            sbuf.append(a[i]);
-            if (i != len - 1) {
-                sbuf.append(", ");
-            }
-        }
-        sbuf.append(']');
-    }
-
-    private static void charArrayAppend(@NonNull StringBuilder sbuf, @NonNull char[] a) {
-        sbuf.append('[');
-        int len = a.length;
-        for (int i = 0; i < len; ++i) {
-            sbuf.append(a[i]);
-            if (i != len - 1) {
-                sbuf.append(", ");
-            }
-        }
-        sbuf.append(']');
-    }
-
-    private static void shortArrayAppend(@NonNull StringBuilder sbuf, @NonNull short[] a) {
-        sbuf.append('[');
-        int len = a.length;
-        for (int i = 0; i < len; ++i) {
-            sbuf.append(a[i]);
-            if (i != len - 1) {
-                sbuf.append(", ");
-            }
-        }
-        sbuf.append(']');
-    }
-
-    private static void intArrayAppend(@NonNull StringBuilder sbuf, @NonNull int[] a) {
-        sbuf.append('[');
-        int len = a.length;
-        for (int i = 0; i < len; ++i) {
-            sbuf.append(a[i]);
-            if (i != len - 1) {
-                sbuf.append(", ");
-            }
-        }
-        sbuf.append(']');
-    }
-
-    private static void longArrayAppend(@NonNull StringBuilder sbuf, @NonNull long[] a) {
-        sbuf.append('[');
-        int len = a.length;
-        for (int i = 0; i < len; ++i) {
-            sbuf.append(a[i]);
-            if (i != len - 1) {
-                sbuf.append(", ");
-            }
-        }
-        sbuf.append(']');
-    }
-
-    private static void floatArrayAppend(@NonNull StringBuilder sbuf, @NonNull float[] a) {
-        sbuf.append('[');
-        int len = a.length;
-        for (int i = 0; i < len; ++i) {
-            sbuf.append(a[i]);
-            if (i != len - 1) {
-                sbuf.append(", ");
-            }
-        }
-        sbuf.append(']');
-    }
-
-    private static void doubleArrayAppend(@NonNull StringBuilder sbuf, @NonNull double[] a) {
-        sbuf.append('[');
-        int len = a.length;
-        for (int i = 0; i < len; ++i) {
-            sbuf.append(a[i]);
-            if (i != len - 1) {
-                sbuf.append(", ");
-            }
-        }
-        sbuf.append(']');
     }
 }
