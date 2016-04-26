@@ -26,7 +26,9 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -47,18 +49,24 @@ public final class BunyanGenerator {
     private static final String XML_ATTR_TAGSTYLE = "tagstyle";
 
     private static final String XML_GLOBAL = "global";
+    private static final String XML_APPENDER = "appender";
     private static final String XML_LOGGER = "logger";
 
+    private static final String METHOD_APPENDER_LIST = "getAppenderList";
     private static final String METHOD_CLASS_THRESHOLD_MAP = "getClassThresholdMap";
     private static final String METHOD_GLOBAL_LEVEL = "getGlobalLevel";
     private static final String METHOD_TAG_STYLE = "getTagStyle";
 
+    private static final String VAR_APPENDER_LIST = "appenderList";
     private static final String VAR_CLASS_THRESHOLD_MAP = "classThresholdMap";
 
     private static final Logger log = LoggerFactory.getLogger(BunyanGenerator.class.getSimpleName());
 
     @NonNull
     private final Map<String, String> mClassThresholds = new HashMap<>();
+
+    @NonNull
+    private final List<String> mAppenders = new ArrayList<>();
 
     @NonNull
     private final String mBaseOutputDir;
@@ -208,6 +216,7 @@ public final class BunyanGenerator {
 
         builder.addMethod(createStringMethod(METHOD_GLOBAL_LEVEL, mGlobalLevel));
         builder.addMethod(createStringMethod(METHOD_TAG_STYLE, mTagStyle));
+        builder.addMethod(createAppenderListMethod(mAppenders));
         builder.addMethod(createClassThresholdMapMethod(mClassThresholds));
 
         JavaFile.Builder javaBuilder = JavaFile.builder(PACKAGE_NAME, builder.build())
@@ -236,10 +245,17 @@ public final class BunyanGenerator {
                     String className = xpp.getAttributeValue(null, XML_ATTR_CLASS);
                     String levelName = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
                     if (isEmpty(className) || isEmpty(levelName)) {
-                        log("Invalid config specified: " + className + " -- " + levelName);
+                        log("Invalid logger specified: " + className + " -- " + levelName);
                         continue;
                     }
                     mClassThresholds.put(className, levelName);
+                } else if (XML_APPENDER.equals(name)) {
+                    String className = xpp.getAttributeValue(null, XML_ATTR_CLASS);
+                    if (isEmpty(className)) {
+                        log("Invalid appender specified: " + className);
+                        continue;
+                    }
+                    mAppenders.add(className);
                 } else if (XML_GLOBAL.equals(name)) {
                     String globalLevel = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
                     if (!isEmpty(globalLevel)) {
@@ -257,6 +273,25 @@ public final class BunyanGenerator {
         }
 
         closeQuietly(inputStream);
+    }
+
+    @NonNull
+    private MethodSpec createAppenderListMethod(@NonNull List<String> classes) {
+        TypeName type = TypeVariableName.get(Class.class);
+        TypeName typeName = ParameterizedTypeName.get(ClassName.get(ArrayList.class), type);
+
+        MethodSpec.Builder builder = MethodSpec.methodBuilder(METHOD_APPENDER_LIST)
+                .addModifiers(STATIC)
+                .returns(typeName);
+
+        builder.addStatement("$T $L = new $T()", typeName, VAR_APPENDER_LIST, typeName);
+
+        for (String className : classes) {
+            builder.addStatement("$L.add($L.class)", VAR_APPENDER_LIST, className);
+        }
+        builder.addStatement("return $L", VAR_APPENDER_LIST);
+
+        return builder.build();
     }
 
     @NonNull

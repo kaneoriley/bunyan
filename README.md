@@ -46,12 +46,15 @@ A short summary is that Bunyan is about 20% faster and has 4% of the method coun
 Bunyan requires you to add a `bunyan.xml` to your root `assets` folder, to read configuration details. If this file is
 not present, there are default values which will be used.
 
-A basic configuration file is as follows:
+A basic configuration file that will perform standard logging is as follows:
 
 ```xml
 <bunyan>
     <!-- global threshold and tag style -->
     <global level="INFO" tagstyle="SHORT"/> <!-- These are the default values -->
+
+    <!-- Simple logcat appender, explained below -->
+    <appender class="me.oriley.bunyan.BunyanLogcatAppender"/>
 </bunyan>
 ```
 
@@ -64,7 +67,7 @@ There are 6 acceptable values for logging threshold `level`:
  * DEBUG:  Threshold for `android.util.Log.DEBUG` / `log.debug()`
  * TRACE:  Threshold for `android.util.Log.VERBOSE` / `log.trace()`
 
-Any logs with a lower priority than the value specified will not be passed along to any of the loggers.
+Any logs with a lower priority than the value specified will not be passed along to any of the appenders.
 
 There are 4 acceptable values for `tagstyle`:
 
@@ -98,54 +101,81 @@ You can override individual configuration options in a `bunyan-overrides.xml` fi
 This can be used to change specific values for certain build types or flavors, without needing to copy and paste the
 entire base configuration everywhere.
 
-Included are two sample loggers, that you will need to add to Bunyan manually inside a static block inside your
-`Application` class, to ensure they are initialised early and can capture all logging in your application.
+Included are three sample appenders, that you will need to add to your configuration xml if you would like to have them
+used. The same method applies to any custom appenders you create, provided they have a zero argument constructor.
 
-#### BunyanLogcatLogger
+#### BunyanLogcatAppender
 
-Takes no arguments and appends all logs to Logcat. This should be used unless you have implemented your own logger
-to handle this.
-
-```java
-static {
-    Bunyan.addLogger(new BunyanLogcatLogger());
-}
+```xml
+<bunyan>
+    ...
+    <appender class="me.oriley.bunyan.BunyanLogcatAppender"/>
+</bunyan>
 ```
 
-#### BunyanCrashlyticsLogger
+Takes no arguments and appends all logs to Logcat. This should be used unless you have implemented your own appender
+to handle this.
+
+#### BunyanCrashlyticsAppender and BunyanCrashlyticsExceptionAppender
 
 Note: Requires an extra dependency (listed in the dependency section below)
 
-Takes 2 arguments. The first is `Crashlytics.class`, to prevent instantiation in projects where Crashlytics is not
-available as it is not included as a compile dependency in Bunyan. The second parameter tells the logger whether any
-logged exceptions should be sent to Crashlytics as a Non-Fatal (defaults to false).
+There are two different Crashlytics appenders. Only include one of them, depending on your desired usage, otherwise
+all logs will be sent to the Crashlytics SDK twice.
+
+```xml
+<bunyan>
+    ...
+    <appender class="me.oriley.bunyan.crashlytics.BunyanCrashlyticsAppender"/>
+</bunyan>
+```
+
+Will forward all logs on to the Crashlytics SDK, which will use them when sending in crash reports.
+
+```xml
+<bunyan>
+    ...
+    <appender class="me.oriley.bunyan.crashlytics.BunyanCrashlyticsExceptionAppender"/>
+</bunyan>
+```
+
+The same as `BunyanCrashlyticsAppender`, except all logged exceptions will also be reported to Crashlytics as
+Non-Fatals. Use this if you like to keep track of exceptions you are logging.
+
+Remember, no appenders are automatically installed, so by default no logging will be done if you don't add any to your
+configuration.
+
+## Custom Appenders
+
+You also have the option of adding your own custom appenders for capturing logs to send to your analytics platform of
+choice. Simply implement the `BunyanAppender` interface and handle log events as required. You will also need to add
+an entry for the appender to your configuration xml.
+
+```xml
+<bunyan>
+    ...
+    <!-- Where MyAnalyticsAppender is your custom appender with a zero argument constructor -->
+    <appender class="com.my.app.MyAnalyticsAppender"/>
+</bunyan>
+```
+
+If you need to perform initialisation on your appender, you can add it manually from your code. I would suggest doing
+it inside your `Application`s `attachBaseContext` method, so that it can be capturing logs as soon as possible.
 
 ```java
-static {
+protected void attachBaseContext(Context base) {
     ...
-    Bunyan.addLogger(new BunyanCrashlyticsLogger(Crashlytics.class, true));
+    // Where MyComplicatedAppender is your custom appender
+    Bunyan.addAppender(new MyComplicatedAppender(this, "Needs", "Arguments")); 
 }
 ```
 
-No loggers are automatically installed, so by default no logging will be done if you don't add any. There is also an
-`addLoggers` method that takes a varargs array, so you could simplify the above to:
+There is also an `addAppenders` method that takes a varargs array, so you can add multiple at the same time:
 
 ```java
-static {
-    Bunyan.addLoggers(new BunyanLogcatLogger(), new BunyanCrashlyticsLogger(Crashlytics.class, true));
-}
-```
-
-## Custom Loggers
-
-You also have the option of adding your own custom loggers for capturing logs to send to your analytics platform of
-choice. Simply implement the `BunyanLogger` interface and handle log events as required. You will also need to add
-the logger to Bunyan inside the static initialisation block like so:
-
-```java
-static {
+protected void attachBaseContext(Context base) {
     ...
-    Bunyan.addLogger(new MyAnalyticsLogger()); // Where MyAnalyticsLogger is your custom class
+    Bunyan.addAppenders(new Appender1(context), new Appender2(context));
 }
 ```
 
@@ -238,7 +268,7 @@ dependencies {
     // Required
     compile 'com.github.oriley-me.bunyan:bunyan-core:0.4.1'
 
-    // Only necessary if you plan on using a BunyanCrashlyticsLogger
+    // Only necessary if you plan on using a BunyanCrashlyticsAppender/BunyanCrashlyticsExceptionAppender
     compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.4.1'
 
     // Make sure include any Lombok helper module you require here

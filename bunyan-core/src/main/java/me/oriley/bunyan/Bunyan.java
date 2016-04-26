@@ -50,7 +50,7 @@ public final class Bunyan {
     private static final int INVALID = -1;
 
     @NonNull
-    private static final List<BunyanLogger> sLoggers = new ArrayList<>();
+    private static final List<BunyanAppender> sAppenders = new ArrayList<>();
 
     @NonNull
     @Level
@@ -69,6 +69,15 @@ public final class Bunyan {
 
         for (Map.Entry<String, String> entry : BunyanConfig.getClassThresholdMap().entrySet()) {
             sClassThresholds.put(entry.getKey(), parseLevel(entry.getValue()));
+        }
+
+        for (Class c : BunyanConfig.getAppenderList()) {
+            try {
+                BunyanAppender bunyanAppender = (BunyanAppender) c.newInstance();
+                sAppenders.add(bunyanAppender);
+            } catch (Throwable t) {
+                Log.e(TAG, "Error creating appender: " + c, t);
+            }
         }
     }
 
@@ -123,12 +132,12 @@ public final class Bunyan {
         return sTagStyle;
     }
 
-    public static void addLogger(@NonNull BunyanLogger logger) {
-        sLoggers.add(logger);
+    public static void addAppender(@NonNull BunyanAppender appender) {
+        sAppenders.add(appender);
     }
 
-    public static void addLoggers(@NonNull BunyanLogger... loggers) {
-        Collections.addAll(sLoggers, loggers);
+    public static void addAppenders(@NonNull BunyanAppender... appenders) {
+        Collections.addAll(sAppenders, appenders);
     }
 
     static void logEvent(@Level int level,
@@ -157,8 +166,8 @@ public final class Bunyan {
             }
         }
 
-        for (BunyanLogger logger : sLoggers) {
-            logger.logEvent(level, name + methodName, message, t);
+        for (BunyanAppender appender : sAppenders) {
+            appender.logEvent(level, name + methodName, message, t);
         }
     }
 

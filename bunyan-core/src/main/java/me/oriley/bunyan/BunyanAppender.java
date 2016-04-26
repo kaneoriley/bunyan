@@ -20,7 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import me.oriley.bunyan.Bunyan.Level;
 
-public interface BunyanLogger {
+public interface BunyanAppender {
 
     void logEvent(@Level int level,
                   @NonNull String tag,

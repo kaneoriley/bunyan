@@ -29,7 +29,7 @@ import me.oriley.bunyan.Bunyan.Level;
  * Log messages are line wrapped every 4000 characters due to limit (based on https://github.com/JakeWharton/timber)
  */
 @SuppressWarnings("unused")
-public final class BunyanLogcatLogger implements BunyanLogger {
+public final class BunyanLogcatAppender implements BunyanAppender {
 
     private static final int MAX_MSG_LENGTH = 4000;
     private static final int MAX_TAG_LENGTH = 23;

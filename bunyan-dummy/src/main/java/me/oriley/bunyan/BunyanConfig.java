@@ -16,12 +16,16 @@
 
 package me.oriley.bunyan;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 // Dummy class to allow later access without reflection
 @SuppressWarnings("unused")
 public final class BunyanConfig {
+
+    static ArrayList<Class> getAppenderList() {
+        return new ArrayList<Class>();
+    }
 
     static HashMap<String, String> getClassThresholdMap() {
         return new HashMap<String, String>();

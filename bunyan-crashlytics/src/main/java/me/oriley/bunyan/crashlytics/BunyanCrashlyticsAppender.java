@@ -16,6 +16,7 @@
 
 package me.oriley.bunyan.crashlytics;
 
+import android.support.annotation.CallSuper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -23,32 +24,26 @@ import android.util.Log;
 import com.crashlytics.android.Crashlytics;
 
 import me.oriley.bunyan.Bunyan.Level;
-import me.oriley.bunyan.BunyanLogger;
+import me.oriley.bunyan.BunyanAppender;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class BunyanCrashlyticsLogger implements BunyanLogger {
-
-    private final boolean mLogExceptions;
-
-
-    public BunyanCrashlyticsLogger(@NonNull Class<? extends Crashlytics> c, boolean logExceptions) {
-        // Class is not needed but ensures user has Crashlytics imported in their application
-        mLogExceptions = logExceptions;
-    }
-
+public class BunyanCrashlyticsAppender implements BunyanAppender {
 
     @Override
-    public void logEvent(@Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+    public final void logEvent(@Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
         Crashlytics crashlytics = Crashlytics.getInstance();
         if (crashlytics == null || crashlytics.core == null) {
             // Not initialised yet, don't attempt
             return;
         }
 
+        logEventInternal(level, tag, message, t);
+    }
+
+    @CallSuper
+    protected void logEventInternal(@Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+        Log.e("BUNYAN", "LOGGING EVENT TO CRAHSLYTICS");
         Crashlytics.log(formatLogMessage(level, tag, message));
-        if (t != null && mLogExceptions) {
-            Crashlytics.logException(t);
-        }
     }
 
     @NonNull
