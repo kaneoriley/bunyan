@@ -84,6 +84,8 @@ public final class Bunyan {
             return Log.WARN;
         } else if ("ERROR".equals(level)) {
             return Log.ERROR;
+        } else if ("ASSERT".equals(level)) {
+            return Log.ASSERT;
         } else {
             Log.e(TAG, "Invalid level " + level + ", using default (INFO)");
             return Log.INFO;
