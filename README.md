@@ -90,6 +90,9 @@ You can also set class specific thresholds to override the global level if you n
 </bunyan>
 ```
 
+The gradle plugin `bunyan-plugin` (more below) will parse this configuration and generate a class file at compile time,
+so that at runtime the static initialisation takes < 0ms and uses no `InputStream` or `getResourceAsStream` methods that
+other libraries use and can introduce lag in application startup, as well as bloating memory consumption.
 
 Included are two sample loggers, that you will need to add to Bunyan manually inside a static block inside your
 `Application` class, to ensure they are initialised early and can capture all logging in your application.
@@ -197,7 +200,21 @@ public class MyClass {
 
 ## Gradle Dependency
 
- * Add JitPack.io to your repositories list in the root projects build.gradle:
+ * Add JitPack.io repo and `bunyan-plugin` dependency to your buildscript:
+
+```gradle
+buildscript {
+    repositories {
+        maven { url "https://jitpack.io" }
+    }
+
+    dependencies {
+        classpath 'com.github.oriley-me.bunyan:bunyan-plugin:0.4.1'
+    }
+}
+```
+
+ * Add JitPack.io to your app projects repositories list:
 
 ```gradle
 repositories {
@@ -205,20 +222,25 @@ repositories {
 }
 ```
 
- * Add the required dependencies:
+ * Apply the plugin to your application or library project, and add the module runtime dependency:
 
 ```gradle
+apply plugin: 'com.android.application' || apply plugin: 'com.android.library'
+apply plugin: 'me.oriley.bunyan-plugin'
+
+...
+
 dependencies {
     // Required
-    compile 'com.github.oriley-me.bunyan:bunyan-core:0.4.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-core:0.4.1'
 
     // Only necessary if you plan on using a BunyanCrashlyticsLogger
-    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.4.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.4.1'
 
     // Make sure include any Lombok helper module you require here
 }
 ```
 
-If you would like to check out the latest development version, please substitute the versions for `develop-SNAPSHOT`.
+If you would like to check out the latest development version, please substitute all versions for `develop-SNAPSHOT`.
 Keep in mind that it is very likely things could break or be unfinished, so stick the official releases if you want
 things to be more predictable.

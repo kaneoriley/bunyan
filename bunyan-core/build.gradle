@@ -3,5 +3,6 @@ applyLibraryConfig(this)
 //noinspection GroovyAssignabilityCheck
 dependencies {
     // Support annotations
+    provided project(':bunyan-dummy')
     compile "com.android.support:support-annotations:23.3.0"
 }
