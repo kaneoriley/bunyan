@@ -6,6 +6,10 @@ Change Log
  *  Minor API Change: Split Lombok helper module into four separate dependencies to cater for cases where there may
     be a namespace clash (there's now `-log4j`, `-log4j2`, `-slf4j` and `-xslf4j` modules for `@Log4j`, `@Log4j2`, `@Slf4J` and 
     `@XSlf4j` respectively)
+ *  Minor API Change: Now requires adding `bunyan-plugin` to the classpath, and applying the plugin to the application
+    or library module. The plugin generates a configuration class at compile time, removing all need for reflection,
+    input streams, and excess memory usage. Initialisation time is now < 0ms with no overhead, you're welcome :)
+  * Add support for `bunyan-overrides.xml` to specify build/flavor specific tweaks to the configuration
 
 ## Version 0.4.0
 

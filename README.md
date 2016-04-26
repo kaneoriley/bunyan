@@ -94,6 +94,10 @@ The gradle plugin `bunyan-plugin` (more below) will parse this configuration and
 so that at runtime the static initialisation takes < 0ms and uses no `InputStream` or `getResourceAsStream` methods that
 other libraries use and can introduce lag in application startup, as well as bloating memory consumption.
 
+You can override individual configuration options in a `bunyan-overrides.xml` file placed in your root `assets` folder.
+This can be used to change specific values for certain build types or flavors, without needing to copy and paste the
+entire base configuration everywhere.
+
 Included are two sample loggers, that you will need to add to Bunyan manually inside a static block inside your
 `Application` class, to ensure they are initialised early and can capture all logging in your application.
 

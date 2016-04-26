@@ -39,6 +39,9 @@ public final class BunyanGenerator {
     private static final String CLASS_NAME = "BunyanConfig";
     private static final String BUNYAN_HASH = BunyanHasher.getActualHash();
 
+    private static final String BUNYAN_XML = "/bunyan.xml";
+    private static final String BUNYAN_OVERRIDES_XML = "/bunyan-overrides.xml";
+
     private static final String XML_ATTR_CLASS = "class";
     private static final String XML_ATTR_LEVEL = "level";
     private static final String XML_ATTR_TAGSTYLE = "tagstyle";
@@ -55,6 +58,9 @@ public final class BunyanGenerator {
     private static final Logger log = LoggerFactory.getLogger(BunyanGenerator.class.getSimpleName());
 
     @NonNull
+    private final Map<String, String> mClassThresholds = new HashMap<>();
+
+    @NonNull
     private final String mBaseOutputDir;
 
     @NonNull
@@ -64,6 +70,12 @@ public final class BunyanGenerator {
     private final String mTaskName;
 
     private final boolean mDebugLogging;
+
+    @NonNull
+    private String mGlobalLevel = "INFO";
+
+    @NonNull
+    private String mTagStyle = "SHORT";
 
 
     public BunyanGenerator(@NonNull String baseOutputDir,
@@ -183,10 +195,20 @@ public final class BunyanGenerator {
                 .addModifiers(PUBLIC, FINAL);
 
         try {
-            parseConfig(builder);
+            parseFile(BUNYAN_XML);
         } catch (XmlPullParserException | IOException e) {
-            e.printStackTrace();
+            logError("Failure parsing " + BUNYAN_XML, e, false);
         }
+
+        try {
+            parseFile(BUNYAN_OVERRIDES_XML);
+        } catch (XmlPullParserException | IOException e) {
+            logError("Failure parsing " + BUNYAN_OVERRIDES_XML, e, false);
+        }
+
+        builder.addMethod(createStringMethod(METHOD_GLOBAL_LEVEL, mGlobalLevel));
+        builder.addMethod(createStringMethod(METHOD_TAG_STYLE, mTagStyle));
+        builder.addMethod(createClassThresholdMapMethod(mClassThresholds));
 
         JavaFile.Builder javaBuilder = JavaFile.builder(PACKAGE_NAME, builder.build())
                 .indent("    ");
@@ -198,16 +220,14 @@ public final class BunyanGenerator {
         return javaBuilder.build();
     }
 
-    private void parseConfig(@NonNull TypeSpec.Builder builder) throws XmlPullParserException, IOException {
+    private void parseFile(@NonNull String fileName) throws XmlPullParserException, IOException {
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
         factory.setNamespaceAware(true);
         XmlPullParser xpp = factory.newPullParser();
 
-        InputStream inputStream = new FileInputStream(new File(mVariantAssetDir + "/bunyan.xml"));
+        InputStream inputStream = new FileInputStream(new File(mVariantAssetDir + fileName));
         xpp.setInput(new InputStreamReader(inputStream));
         int eventType = xpp.getEventType();
-
-        Map<String, String> classThresholds = new HashMap<>();
 
         while (eventType != XmlPullParser.END_DOCUMENT) {
             if (eventType == XmlPullParser.START_TAG) {
@@ -219,18 +239,21 @@ public final class BunyanGenerator {
                         log("Invalid config specified: " + className + " -- " + levelName);
                         continue;
                     }
-                    classThresholds.put(className, levelName);
+                    mClassThresholds.put(className, levelName);
                 } else if (XML_GLOBAL.equals(name)) {
-                    builder.addMethod(createStringMethod(METHOD_GLOBAL_LEVEL, xpp.getAttributeValue(null, XML_ATTR_LEVEL)));
-                    builder.addMethod(createStringMethod(METHOD_TAG_STYLE, xpp.getAttributeValue(null, XML_ATTR_TAGSTYLE)));
+                    String globalLevel = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
+                    if (!isEmpty(globalLevel)) {
+                        mGlobalLevel = globalLevel;
+                    }
+
+                    String tagStyle = xpp.getAttributeValue(null, XML_ATTR_TAGSTYLE);
+                    if (!isEmpty(tagStyle)) {
+                        mTagStyle = tagStyle;
+                    }
                 }
             }
 
             eventType = xpp.next();
-        }
-
-        if (!classThresholds.isEmpty()) {
-            builder.addMethod(createClassThresholdMapMethod(classThresholds));
         }
 
         closeQuietly(inputStream);
