@@ -27,7 +27,7 @@ import me.oriley.bunyan.Bunyan.Level;
 import me.oriley.bunyan.BunyanAppender;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public class BunyanCrashlyticsAppender implements BunyanAppender {
+public class BunyanCrashlyticsAppender extends BunyanAppender {
 
     @Override
     public final void logEvent(@Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {

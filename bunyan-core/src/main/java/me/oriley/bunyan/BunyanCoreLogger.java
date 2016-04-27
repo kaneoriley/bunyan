@@ -30,16 +30,21 @@ public class BunyanCoreLogger {
     @NonNull
     private final String mName;
 
+    @Nullable
+    private final Class mClass;
+
 
     // Specifying a name will skip any tag layout preferences
     public BunyanCoreLogger(@NonNull String name) {
         mName = name;
         mThreshold = Bunyan.getThreshold(name);
+        mClass = null;
     }
 
     public BunyanCoreLogger(@NonNull Class c) {
+        mClass = c;
         String className = c.getName();
-        mName = Bunyan.getLoggerName(className);
+        mName = className;
         mThreshold = Bunyan.getThreshold(className);
     }
 
@@ -143,13 +148,13 @@ public class BunyanCoreLogger {
     private void log(@Level int level, @Nullable String format, @Nullable Object... argArray) {
         if (isLoggable(level)) {
             FormattingPair ft = MessageFormatter.formatArray(format, argArray);
-            Bunyan.logEvent(level, mName, ft.message, ft.throwable);
+            Bunyan.logEvent(level, mName, mClass, ft.message, ft.throwable);
         }
     }
 
     private void log(@Level int level, @Nullable String message, @Nullable Throwable throwable) {
         if (isLoggable(level)) {
-            Bunyan.logEvent(level, mName, message, throwable);
+            Bunyan.logEvent(level, mName, mClass, message, throwable);
         }
     }
 

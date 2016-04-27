@@ -14,6 +14,7 @@ Change Log
     Appenders which require more than that should be added in the `attachBaseContext` method of your application.
   * Feature: Add support for `bunyan-overrides.xml` to specify build/flavor specific tweaks to the configuration
   * Feature: Support for constructing a logger with a hardcoded name (to complete Lombok compatbility)
+  * Feature/API Change: Now supports specifying basic log tag patterns per appender (TODO: Add to README)
   * Bugfix: Fix ASSERT level threshold parsing
 
 ## Version 0.4.0

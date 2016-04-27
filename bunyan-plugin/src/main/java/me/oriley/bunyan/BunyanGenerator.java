@@ -46,24 +46,35 @@ public final class BunyanGenerator {
 
     private static final String XML_ATTR_CLASS = "class";
     private static final String XML_ATTR_LEVEL = "level";
-    private static final String XML_ATTR_TAGSTYLE = "tagstyle";
+    private static final String XML_ATTR_TAGPATTERN = "tagPattern";
 
     private static final String XML_GLOBAL = "global";
     private static final String XML_APPENDER = "appender";
     private static final String XML_LOGGER = "logger";
 
     private static final String METHOD_APPENDER_LIST = "getAppenderList";
-    private static final String METHOD_CLASS_THRESHOLD_MAP = "getClassThresholdMap";
+    private static final String METHOD_APPENDER_TAGPATTERN_MAP = "getAppenderTagPatternMap";
+    private static final String METHOD_LOGGER_THRESHOLD_MAP = "getLoggerThresholdMap";
     private static final String METHOD_GLOBAL_LEVEL = "getGlobalLevel";
-    private static final String METHOD_TAG_STYLE = "getTagStyle";
+    private static final String METHOD_GLOBAL_TAG_PATTERN = "getGlobalTagPattern";
 
-    private static final String VAR_APPENDER_LIST = "appenderList";
-    private static final String VAR_CLASS_THRESHOLD_MAP = "classThresholdMap";
+    private static final String VAR_LOCAL_LIST = "list";
+    private static final String VAR_LOCAL_MAP = "map";
+
+    private static final String TAG_NAME_SHORT = "%n";
+    private static final String TAG_NAME_LONG = "%N";
+    private static final String TAG_METHOD = "%m";
+    private static final String TAG_THREAD_IF_NOT_MAIN = "%t";
+    private static final String TAG_THREAD_ALWAYS = "%T";
+    private static final String TAG_LEVEL = "%l";
 
     private static final Logger log = LoggerFactory.getLogger(BunyanGenerator.class.getSimpleName());
 
     @NonNull
-    private final Map<String, String> mClassThresholds = new HashMap<>();
+    private final Map<String, String> mAppenderTagPatterns = new HashMap<>();
+
+    @NonNull
+    private final Map<String, String> mLoggerThresholds = new HashMap<>();
 
     @NonNull
     private final List<String> mAppenders = new ArrayList<>();
@@ -83,7 +94,7 @@ public final class BunyanGenerator {
     private String mGlobalLevel = "INFO";
 
     @NonNull
-    private String mTagStyle = "SHORT";
+    private String mGlobalTagPattern = "%S";
 
 
     public BunyanGenerator(@NonNull String baseOutputDir,
@@ -215,9 +226,10 @@ public final class BunyanGenerator {
         }
 
         builder.addMethod(createStringMethod(METHOD_GLOBAL_LEVEL, mGlobalLevel));
-        builder.addMethod(createStringMethod(METHOD_TAG_STYLE, mTagStyle));
+        builder.addMethod(createStringMethod(METHOD_GLOBAL_TAG_PATTERN, mGlobalTagPattern));
         builder.addMethod(createAppenderListMethod(mAppenders));
-        builder.addMethod(createClassThresholdMapMethod(mClassThresholds));
+        builder.addMethod(createMapMethod(mLoggerThresholds, METHOD_LOGGER_THRESHOLD_MAP));
+        builder.addMethod(createMapMethod(mAppenderTagPatterns, METHOD_APPENDER_TAGPATTERN_MAP));
 
         JavaFile.Builder javaBuilder = JavaFile.builder(PACKAGE_NAME, builder.build())
                 .indent("    ");
@@ -249,7 +261,7 @@ public final class BunyanGenerator {
                         eventType = xpp.next();
                         continue;
                     }
-                    mClassThresholds.put(className, levelName);
+                    mLoggerThresholds.put(className, levelName);
                 } else if (XML_APPENDER.equals(name)) {
                     String className = xpp.getAttributeValue(null, XML_ATTR_CLASS);
                     if (isEmpty(className)) {
@@ -261,15 +273,45 @@ public final class BunyanGenerator {
                     if (!mAppenders.contains(className)) {
                         mAppenders.add(className);
                     }
+
+                    String tagPattern = xpp.getAttributeValue(null, XML_ATTR_TAGPATTERN);
+                    if (!isEmpty(tagPattern)) {
+                        int nameCount = getMatchCount(tagPattern, TAG_NAME_LONG);
+                        nameCount += getMatchCount(tagPattern, TAG_NAME_SHORT);
+                        if (nameCount != 1) {
+                            throw new IllegalArgumentException(fileName + " must contain exactly one of " + TAG_NAME_LONG + " or " + TAG_NAME_SHORT + "\n" +
+                                "Found " + nameCount + " in " + tagPattern);
+                        }
+
+                        int threadCount = getMatchCount(tagPattern, TAG_THREAD_IF_NOT_MAIN);
+                        threadCount += getMatchCount(tagPattern, TAG_THREAD_ALWAYS);
+                        if (threadCount > 1) {
+                            throw new IllegalArgumentException(fileName + " cannot have more than one of " + TAG_THREAD_IF_NOT_MAIN + " or " + TAG_THREAD_ALWAYS+ "\n" +
+                                    "Found " + threadCount + " in " + tagPattern);
+                        }
+
+                        int methodCount = getMatchCount(tagPattern, TAG_METHOD);
+                        if (methodCount > 1) {
+                            throw new IllegalArgumentException(fileName + " cannot have more than one of " + TAG_METHOD + "\n" +
+                                    "Found " + methodCount + " in " + tagPattern);
+                        }
+
+                        int levelCount = getMatchCount(tagPattern, TAG_LEVEL);
+                        if (levelCount > 1) {
+                            throw new IllegalArgumentException(fileName + " cannot have more than one of " + TAG_LEVEL + "\n" +
+                                    "Found " + levelCount + " in " + tagPattern);
+                        }
+                        mAppenderTagPatterns.put(className, tagPattern);
+                    }
                 } else if (XML_GLOBAL.equals(name)) {
                     String globalLevel = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
                     if (!isEmpty(globalLevel)) {
                         mGlobalLevel = globalLevel;
                     }
 
-                    String tagStyle = xpp.getAttributeValue(null, XML_ATTR_TAGSTYLE);
-                    if (!isEmpty(tagStyle)) {
-                        mTagStyle = tagStyle;
+                    String globalTagPattern = xpp.getAttributeValue(null, XML_ATTR_TAGPATTERN);
+                    if (!isEmpty(globalTagPattern)) {
+                        mGlobalTagPattern = globalTagPattern;
                     }
                 }
             }
@@ -289,31 +331,31 @@ public final class BunyanGenerator {
                 .addModifiers(STATIC)
                 .returns(typeName);
 
-        builder.addStatement("$T $L = new $T()", typeName, VAR_APPENDER_LIST, typeName);
+        builder.addStatement("$T $L = new $T()", typeName, VAR_LOCAL_LIST, typeName);
 
         for (String className : classes) {
-            builder.addStatement("$L.add($L.class)", VAR_APPENDER_LIST, className);
+            builder.addStatement("$L.add($L.class)", VAR_LOCAL_LIST, className);
         }
-        builder.addStatement("return $L", VAR_APPENDER_LIST);
+        builder.addStatement("return $L", VAR_LOCAL_LIST);
 
         return builder.build();
     }
 
     @NonNull
-    private MethodSpec createClassThresholdMapMethod(@NonNull Map<String, String> classes) {
+    private MethodSpec createMapMethod(@NonNull Map<String, String> entries, @NonNull String methodName) {
         TypeName stringType = TypeVariableName.get(String.class);
         TypeName typeName = ParameterizedTypeName.get(ClassName.get(HashMap.class), stringType, stringType);
 
-        MethodSpec.Builder builder = MethodSpec.methodBuilder(METHOD_CLASS_THRESHOLD_MAP)
+        MethodSpec.Builder builder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(STATIC)
                 .returns(typeName);
 
-        builder.addStatement("$T $L = new $T()", typeName, VAR_CLASS_THRESHOLD_MAP, typeName);
+        builder.addStatement("$T $L = new $T()", typeName, VAR_LOCAL_MAP, typeName);
 
-        for (Map.Entry<String, String> entry : classes.entrySet()) {
-            builder.addStatement("$L.put($S, $S)", VAR_CLASS_THRESHOLD_MAP, entry.getKey(), entry.getValue());
+        for (Map.Entry<String, String> entry : entries.entrySet()) {
+            builder.addStatement("$L.put($S, $S)", VAR_LOCAL_MAP, entry.getKey(), entry.getValue());
         }
-        builder.addStatement("return $L", VAR_CLASS_THRESHOLD_MAP);
+        builder.addStatement("return $L", VAR_LOCAL_MAP);
 
         return builder.build();
     }
@@ -325,6 +367,20 @@ public final class BunyanGenerator {
                 .returns(String.class);
         builder.addStatement("return $S", value);
         return builder.build();
+    }
+
+    private static int getMatchCount(@NonNull String string, @NonNull String pattern) {
+        int lastIndex = 0;
+        int count = 0;
+
+        while(lastIndex != -1){
+            lastIndex = string.indexOf(pattern, lastIndex);
+            if (lastIndex != -1) {
+                count ++;
+                lastIndex += pattern.length();
+            }
+        }
+        return count;
     }
 
     private static boolean isEmpty(@Nullable String string) {

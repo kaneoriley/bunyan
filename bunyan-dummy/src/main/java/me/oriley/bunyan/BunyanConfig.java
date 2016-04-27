@@ -20,14 +20,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 // Dummy class to allow later access without reflection
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final class BunyanConfig {
 
     static ArrayList<Class> getAppenderList() {
         return new ArrayList<Class>();
     }
 
-    static HashMap<String, String> getClassThresholdMap() {
+    static HashMap<String, String> getLoggerThresholdMap() {
+        return new HashMap<String, String>();
+    }
+
+    static HashMap<String, String> getAppenderTagPatternMap() {
         return new HashMap<String, String>();
     }
 
@@ -35,7 +39,7 @@ public final class BunyanConfig {
         return "";
     }
 
-    static String getTagStyle() {
+    static String getGlobalTagPattern() {
         return "";
     }
 }

@@ -19,13 +19,13 @@ package me.oriley.bunyan;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.*;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
 public final class Bunyan {
 
     @Retention(RetentionPolicy.SOURCE)
@@ -33,48 +33,47 @@ public final class Bunyan {
     public @interface Level {
     }
 
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({TAG_STYLE_RESTRICTED, TAG_STYLE_SHORT, TAG_STYLE_LONG, TAG_STYLE_FULL})
-    public @interface TagStyle {
-    }
-
-    public static final int TAG_STYLE_RESTRICTED = 0;
-    public static final int TAG_STYLE_SHORT = 1;
-    public static final int TAG_STYLE_LONG = 2;
-    public static final int TAG_STYLE_FULL = 3;
-
     private static final String TAG = Bunyan.class.getSimpleName();
-
-    private static final String BUNYAN_CLASS = getEnclosingClassName(Bunyan.class.getName());
-
-    private static final int INVALID = -1;
 
     @NonNull
     private static final List<BunyanAppender> sAppenders = new ArrayList<>();
 
     @NonNull
     @Level
-    private static final Map<String, Integer> sClassThresholds = new HashMap<>();
+    private static final Map<String, Integer> sLoggerThresholds = new HashMap<>();
+
+    @NonNull
+    private static final Map<String, String> sAppenderTagPatterns;
 
     @Level
     private static int sGlobalThreshold = Log.INFO;
 
-    @TagStyle
-    private static int sTagStyle = TAG_STYLE_SHORT;
+    private static final BunyanTagEncoder sTagEncoder = new BunyanTagEncoder();
 
     static {
         // Load config from plugin generated shim.
         sGlobalThreshold = parseLevel(BunyanConfig.getGlobalLevel());
-        sTagStyle = parseTagStyle(BunyanConfig.getTagStyle());
-
-        for (Map.Entry<String, String> entry : BunyanConfig.getClassThresholdMap().entrySet()) {
-            sClassThresholds.put(entry.getKey(), parseLevel(entry.getValue()));
+        String globalTagPattern = BunyanConfig.getGlobalTagPattern();
+        if (TextUtils.isEmpty(globalTagPattern)) {
+            globalTagPattern = "%S";
         }
 
+        for (Map.Entry<String, String> entry : BunyanConfig.getLoggerThresholdMap().entrySet()) {
+            sLoggerThresholds.put(entry.getKey(), parseLevel(entry.getValue()));
+        }
+
+        sAppenderTagPatterns = BunyanConfig.getAppenderTagPatternMap();
         for (Class c : BunyanConfig.getAppenderList()) {
             try {
                 BunyanAppender bunyanAppender = (BunyanAppender) c.newInstance();
                 sAppenders.add(bunyanAppender);
+
+                String name = c.getName();
+                if (sAppenderTagPatterns.containsKey(name)) {
+                    bunyanAppender.setTagPattern(sAppenderTagPatterns.get(name));
+                } else {
+                    bunyanAppender.setTagPattern(globalTagPattern);
+                }
             } catch (Throwable t) {
                 Log.e(TAG, "Error creating appender: " + c, t);
             }
@@ -101,35 +100,14 @@ public final class Bunyan {
         }
     }
 
-    @TagStyle
-    private static int parseTagStyle(@Nullable String style) {
-        if ("RESTRICTED".equals(style)) {
-            return TAG_STYLE_RESTRICTED;
-        } else if ("SHORT".equals(style)) {
-            return TAG_STYLE_SHORT;
-        } else if ("LONG".equals(style)) {
-            return TAG_STYLE_LONG;
-        } else if ("FULL".equals(style)) {
-            return TAG_STYLE_FULL;
-        } else {
-            Log.e(TAG, "Invalid tag style " + style + ", using default (SHORT)");
-            return TAG_STYLE_SHORT;
-        }
-    }
-
     @Level
-    static int getThreshold(@NonNull String className) {
-        if (sClassThresholds.containsKey(className)) {
+    static int getThreshold(@NonNull String loggerName) {
+        if (sLoggerThresholds.containsKey(loggerName)) {
             //noinspection ResourceType
-            return sClassThresholds.get(className);
+            return sLoggerThresholds.get(loggerName);
         } else {
             return sGlobalThreshold;
         }
-    }
-
-    @TagStyle
-    static int getTagStyle() {
-        return sTagStyle;
     }
 
     public static void addAppender(@NonNull BunyanAppender appender) {
@@ -141,7 +119,8 @@ public final class Bunyan {
     }
 
     static void logEvent(@Level int level,
-                         @NonNull String name,
+                         @NonNull String loggerName,
+                         @NonNull Class loggerClass,
                          @Nullable String message,
                          @Nullable Throwable t) {
         if (message == null) {
@@ -149,39 +128,9 @@ public final class Bunyan {
             return;
         }
 
-        String methodName = "";
-
-        if (sTagStyle == TAG_STYLE_FULL) {
-            boolean foundLocalClass = false;
-
-            StackTraceElement[] trace = Thread.currentThread().getStackTrace();
-            for (StackTraceElement element : trace) {
-                boolean isLocal = BUNYAN_CLASS.equals(getEnclosingClassName(element.getClassName()));
-                if (isLocal) {
-                    foundLocalClass = true;
-                } else if (foundLocalClass) {
-                    methodName = "[" + element.getMethodName() + "]";
-                    break;
-                }
-            }
-        }
-
         for (BunyanAppender appender : sAppenders) {
-            appender.logEvent(level, name + methodName, message, t);
-        }
-    }
-
-    @NonNull
-    private static String getEnclosingClassName(@NonNull String className) {
-        return className.substring(0, className.lastIndexOf('.'));
-    }
-
-    @NonNull
-    static String getLoggerName(@NonNull String className) {
-        if (sTagStyle >= TAG_STYLE_LONG) {
-            return className;
-        } else {
-            return className.substring(className.lastIndexOf('.') + 1).trim();
+            String tag = sTagEncoder.encodeTag(appender.getTagPattern(), level, loggerName, loggerClass);
+            appender.logEvent(level, tag, message, t);
         }
     }
 }

@@ -20,10 +20,19 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import me.oriley.bunyan.Bunyan.Level;
 
-public interface BunyanAppender {
+@SuppressWarnings({"WeakerAccess", "unused"})
+public abstract class BunyanAppender {
 
-    void logEvent(@Level int level,
-                  @NonNull String tag,
-                  @NonNull String message,
-                  @Nullable Throwable t);
+    @NonNull
+    private String mTagPattern;
+
+    public abstract void logEvent(@Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t);
+
+    String getTagPattern() {
+        return mTagPattern;
+    }
+
+    void setTagPattern(@NonNull String tagPattern) {
+        mTagPattern = tagPattern;
+    }
 }
