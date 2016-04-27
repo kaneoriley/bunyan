@@ -246,6 +246,7 @@ public final class BunyanGenerator {
                     String levelName = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
                     if (isEmpty(className) || isEmpty(levelName)) {
                         log("Invalid logger specified: " + className + " -- " + levelName);
+                        eventType = xpp.next();
                         continue;
                     }
                     mClassThresholds.put(className, levelName);
@@ -253,9 +254,13 @@ public final class BunyanGenerator {
                     String className = xpp.getAttributeValue(null, XML_ATTR_CLASS);
                     if (isEmpty(className)) {
                         log("Invalid appender specified: " + className);
+                        eventType = xpp.next();
                         continue;
                     }
-                    mAppenders.add(className);
+
+                    if (!mAppenders.contains(className)) {
+                        mAppenders.add(className);
+                    }
                 } else if (XML_GLOBAL.equals(name)) {
                     String globalLevel = xpp.getAttributeValue(null, XML_ATTR_LEVEL);
                     if (!isEmpty(globalLevel)) {
