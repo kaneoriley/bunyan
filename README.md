@@ -39,7 +39,7 @@ Check out [this SLF4j documentation](http://www.slf4j.org/faq.html#logging_perfo
 
 Have a look at [COMPARISON.md](COMPARISON.md) for a quick benchmark comparison demonstrating the speed of Bunyan
 
-A short summary is that Bunyan is about 20% faster and has 4% of the method count when compared to Logback.
+A short summary is that Bunyan is about 50% faster at runtime and has 4% of the method count when compared to Logback.
 
 ## Configuration
 
