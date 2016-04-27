@@ -30,5 +30,9 @@ public final class XLogger extends BunyanCoreLogger {
         super(c);
     }
 
+    XLogger(@NonNull String name) {
+        super(name);
+    }
+
 
 }

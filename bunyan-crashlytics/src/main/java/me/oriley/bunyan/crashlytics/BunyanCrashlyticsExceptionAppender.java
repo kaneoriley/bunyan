@@ -18,18 +18,16 @@ package me.oriley.bunyan.crashlytics;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import com.crashlytics.android.Crashlytics;
-import me.oriley.bunyan.Bunyan;
+import me.oriley.bunyan.Bunyan.Level;
 
 @SuppressWarnings("unused")
 public class BunyanCrashlyticsExceptionAppender extends BunyanCrashlyticsAppender {
 
     @Override
-    protected void logEventInternal(@Bunyan.Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
+    protected void logEventInternal(@Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
         super.logEventInternal(level, tag, message, t);
 
-        Log.e("BUNYAN", "LOGGING EXCEPTION TO CRAHSLYTICS");
         if (t != null) {
             Crashlytics.logException(t);
         }

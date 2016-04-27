@@ -42,14 +42,13 @@ public class BunyanCrashlyticsAppender implements BunyanAppender {
 
     @CallSuper
     protected void logEventInternal(@Level int level, @NonNull String tag, @NonNull String message, @Nullable Throwable t) {
-        Log.e("BUNYAN", "LOGGING EVENT TO CRAHSLYTICS");
         Crashlytics.log(formatLogMessage(level, tag, message));
     }
 
     @NonNull
-    private static String formatLogMessage(int priority, String tag, String msg) {
+    private static String formatLogMessage(@Level int level, String tag, String msg) {
         String priorityString;
-        switch (priority) {
+        switch (level) {
             case Log.VERBOSE:
                 priorityString = "V";
                 break;

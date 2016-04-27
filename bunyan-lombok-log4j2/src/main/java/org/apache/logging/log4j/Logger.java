@@ -30,5 +30,9 @@ public final class Logger extends BunyanCoreLogger {
         super(c);
     }
 
+    Logger(@NonNull String name) {
+        super(name);
+    }
+
 
 }

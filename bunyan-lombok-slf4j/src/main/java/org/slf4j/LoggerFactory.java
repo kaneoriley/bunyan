@@ -28,4 +28,9 @@ public final class LoggerFactory {
     public static Logger getLogger(@NonNull Class<?> c) {
         return new Logger(c);
     }
+
+    @NonNull
+    public static Logger getLogger(@NonNull String name) {
+        return new Logger(name);
+    }
 }

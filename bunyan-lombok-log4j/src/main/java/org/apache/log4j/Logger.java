@@ -30,9 +30,18 @@ public final class Logger extends BunyanCoreLogger {
         super(c);
     }
 
+    Logger(@NonNull String name) {
+        super(name);
+    }
+
 
     @NonNull
     public static Logger getLogger(@NonNull Class<?> c) {
         return new Logger(c);
+    }
+
+    @NonNull
+    public static Logger getLogger(@NonNull String name) {
+        return new Logger(name);
     }
 }

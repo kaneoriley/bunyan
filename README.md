@@ -86,6 +86,7 @@ You can also set class specific thresholds to override the global level if you n
 <bunyan>
     <!-- global default values and configuration -->
     <global level="INFO" tagstyle="SHORT"/>
+    <appender class="me.oriley.bunyan.BunyanLogcatAppender"/>
 
     <!-- Class specific thresholds -->
     <logger class="my.app.SpamController" level="ERROR" /> <!-- To quieten a particularly noisy class temporarily -->

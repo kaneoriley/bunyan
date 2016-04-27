@@ -31,10 +31,16 @@ public class BunyanCoreLogger {
     private final String mName;
 
 
+    // Specifying a name will skip any tag layout preferences
+    public BunyanCoreLogger(@NonNull String name) {
+        mName = name;
+        mThreshold = Bunyan.getThreshold(name);
+    }
+
     public BunyanCoreLogger(@NonNull Class c) {
         String className = c.getName();
-        mThreshold = Bunyan.getThreshold(className);
         mName = Bunyan.getLoggerName(className);
+        mThreshold = Bunyan.getThreshold(className);
     }
 
 

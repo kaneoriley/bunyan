@@ -28,4 +28,9 @@ public final class XLoggerFactory {
     public static XLogger getXLogger(@NonNull Class<?> c) {
         return new XLogger(c);
     }
+
+    @NonNull
+    public static XLogger getXLogger(@NonNull String name) {
+        return new XLogger(name);
+    }
 }
