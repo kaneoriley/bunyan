@@ -50,8 +50,8 @@ A basic configuration file that will perform standard logging is as follows:
 
 ```xml
 <bunyan>
-    <!-- global threshold and tag style -->
-    <global level="INFO" tagstyle="SHORT"/> <!-- These are the default values -->
+    <!-- global threshold and tag pattern -->
+    <global level="INFO" tagPattern="%S"/> <!-- These are the default values -->
 
     <!-- Simple logcat appender, explained below -->
     <appender class="me.oriley.bunyan.BunyanLogcatAppender"/>
@@ -69,23 +69,23 @@ There are 6 acceptable values for logging threshold `level`:
 
 Any logs with a lower priority than the value specified will not be passed along to any of the appenders.
 
-There are 4 acceptable values for `tagstyle`:
+There are 6 placeholder values available for `tagPattern`:
 
- * RESTRICTED:  Restrict to 23 characters (suggested maximum for `Log`)
- * SHORT:       The enclosing class simple name, i.e. `MyActivity`
- * LONG:        The enclosing class name including package, i.e. `com.myapp.MyActivity`
- * FULL:        Same as LONG but with calling method name appended, i.e. `com.myapp.MyActivity[onResume]`
+ * `%n`:  The enclosing class simple name, i.e. `MyActivity`
+ * `%N`:  The enclosing class name including package, i.e. `com.myapp.MyActivity`
+ * `%m`:  The calling method name, i.e. `onResume`
+ * `%T`:  The current thread name, i.e. `Thread-11`
+ * `%t`:  The same as `%T`, but will only include the thread name if not running on the UI/Main thread.
+ * `%l`:  The logging level, represented as a single character, i.e. `A`, `E`, `W`, `I`, `D`, or `V`
 
- Note that FULL tags require traversing the stack trace to find method names, which could have an adverse impact on
- performance. This is why I would suggest only using FULL on debug builds, or passing in the method name as part of
+ Note that `%m` tags require traversing the stack trace to find method names, which could have an adverse impact on
+ performance. This is why I would suggest only using them on debug builds, or passing in the method name as part of
  the message instead if necessary.
-
-You can also set class specific thresholds to override the global level if you need to:
 
 ```xml
 <bunyan>
     <!-- global default values and configuration -->
-    <global level="INFO" tagstyle="SHORT"/>
+    <global level="INFO" tagPattern="%S"/>
     <appender class="me.oriley.bunyan.BunyanLogcatAppender"/>
 
     <!-- Class specific thresholds -->
