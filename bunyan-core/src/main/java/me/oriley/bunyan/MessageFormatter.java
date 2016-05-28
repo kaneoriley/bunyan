@@ -97,10 +97,26 @@ final class MessageFormatter {
         if (o == null) {
             sbuf.append("null");
         } else {
-            if (!o.getClass().isArray()) {
-                safeObjectAppend(sbuf, o);
-            } else {
+            if (o instanceof Object[]) {
                 safeObjectAppend(sbuf, Arrays.deepToString((Object[]) o));
+            } else if (o instanceof int[]) {
+                safeObjectAppend(sbuf, Arrays.toString((int[]) o));
+            } else if (o instanceof char[]) {
+                safeObjectAppend(sbuf, Arrays.toString((char[]) o));
+            } else if (o instanceof boolean[]) {
+                safeObjectAppend(sbuf, Arrays.toString((boolean[]) o));
+            } else if (o instanceof byte[]) {
+                safeObjectAppend(sbuf, Arrays.toString((byte[]) o));
+            } else if (o instanceof long[]) {
+                safeObjectAppend(sbuf, Arrays.toString((long[]) o));
+            } else if (o instanceof float[]) {
+                safeObjectAppend(sbuf, Arrays.toString((float[]) o));
+            } else if (o instanceof double[]) {
+                safeObjectAppend(sbuf, Arrays.toString((double[]) o));
+            } else if (o instanceof short[]) {
+                safeObjectAppend(sbuf, Arrays.toString((short[]) o));
+            } else {
+                safeObjectAppend(sbuf, o);
             }
         }
     }
