@@ -120,7 +120,7 @@ public final class Bunyan {
 
     static void logEvent(@Level int level,
                          @NonNull String loggerName,
-                         @NonNull Class loggerClass,
+                         @Nullable Class loggerClass,
                          @Nullable String message,
                          @Nullable Throwable t) {
         if (message == null) {

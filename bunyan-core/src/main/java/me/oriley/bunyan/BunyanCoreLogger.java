@@ -55,6 +55,10 @@ public class BunyanCoreLogger {
         log(Log.VERBOSE, msg, (Throwable) null);
     }
 
+    public void trace(String format, Object arg) {
+        log(Log.VERBOSE, format, arg);
+    }
+
     public void trace(String format, Object... argArray) {
         log(Log.VERBOSE, format, argArray);
     }
@@ -69,6 +73,10 @@ public class BunyanCoreLogger {
 
     public void debug(String msg) {
         log(Log.DEBUG, msg, (Throwable) null);
+    }
+
+    public void debug(String format, Object arg) {
+        log(Log.DEBUG, format, arg);
     }
 
     public void debug(String format, Object... argArray) {
@@ -87,6 +95,10 @@ public class BunyanCoreLogger {
         log(Log.INFO, msg, (Throwable) null);
     }
 
+    public void info(String format, Object arg) {
+        log(Log.INFO, format, arg);
+    }
+
     public void info(String format, Object... argArray) {
         log(Log.INFO, format, argArray);
     }
@@ -101,6 +113,10 @@ public class BunyanCoreLogger {
 
     public void warn(String msg) {
         log(Log.WARN, msg, (Throwable) null);
+    }
+
+    public void warn(String format, Object arg) {
+        log(Log.WARN, format, arg);
     }
 
     public void warn(String format, Object... argArray) {
@@ -119,6 +135,10 @@ public class BunyanCoreLogger {
         log(Log.ERROR, msg, (Throwable) null);
     }
 
+    public void error(String format, Object arg) {
+        log(Log.ERROR, format, arg);
+    }
+
     public void error(String format, Object... argArray) {
         log(Log.ERROR, format, argArray);
     }
@@ -133,6 +153,10 @@ public class BunyanCoreLogger {
 
     public void wtf(String msg) {
         log(Log.ASSERT, msg, (Throwable) null);
+    }
+
+    public void wtf(String format, Object arg) {
+        log(Log.ASSERT, format, arg);
     }
 
     public void wtf(String format, Object... argArray) {
