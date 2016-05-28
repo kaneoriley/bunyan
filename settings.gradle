@@ -1,1 +1,11 @@
-include ':bunyan-core', ':bunyan-lombok', ':bunyan-crashlytics'
+include ':bunyan-core'
+include ':bunyan-crashlytics'
+include ':bunyan-dummy'
+include ':bunyan-plugin'
+
+// Lombok helper modules
+include ':bunyan-lombok-log4j'
+include ':bunyan-lombok-log4j2'
+include ':bunyan-lombok-slf4j'
+include ':bunyan-lombok-xslf4j'
+

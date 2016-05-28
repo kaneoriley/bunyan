@@ -1,6 +1,24 @@
 Change Log
 ==========
 
+## Version 0.5.0
+
+_2016-05-28_
+
+ *  API Change: Split Lombok helper module into four separate dependencies to cater for cases where there may
+    be a namespace clash (there's now `-log4j`, `-log4j2`, `-slf4j` and `-xslf4j` modules for `@Log4j`, `@Log4j2`, `@Slf4J` and 
+    `@XSlf4j` respectively)
+ *  API Change: Now requires adding `bunyan-plugin` to the classpath, and applying the plugin to the application
+    or library module. The plugin generates a configuration class at compile time, removing all need for reflection,
+    input streams, and excess memory usage. Initialisation time is now < 0ms with no overhead, you're welcome :)
+  * API Change: Rename `BunyanLogger` to `BunyanAppender` and related fields similarly
+  * API Change: Appenders can now be specified in the configuration xml, provided they have a zero argument constructor.
+    Appenders which require more than that should be added in the `attachBaseContext` method of your application.
+  * Feature: Add support for `bunyan-overrides.xml` to specify build/flavor specific tweaks to the configuration
+  * Feature: Support for constructing a logger with a hardcoded name (to complete Lombok compatbility)
+  * Feature/API Change: Now supports specifying basic log tag patterns per appender (TODO: Add to README)
+  * Bugfix: Fix ASSERT level threshold parsing
+
 ## Version 0.4.0
 
 _2016-04-25_

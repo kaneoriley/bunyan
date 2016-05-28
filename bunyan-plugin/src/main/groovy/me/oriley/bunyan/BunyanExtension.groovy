@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2016 Kane O'Riley
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License")
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,16 +14,18 @@
  *  limitations under the License.
  */
 
-package me.oriley.bunyan;
+package me.oriley.bunyan
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import me.oriley.bunyan.Bunyan.Level;
+@SuppressWarnings("GroovyUnusedDeclaration")
+class BunyanExtension {
 
-public interface BunyanLogger {
+    def boolean debugLogging = false
 
-    void logEvent(@Level int level,
-                  @NonNull String tag,
-                  @NonNull String message,
-                  @Nullable Throwable t);
+    def setDebugLogging(boolean enable) {
+        debugLogging = enable
+    }
+
+    def boolean getDebugLogging() {
+        return debugLogging
+    }
 }

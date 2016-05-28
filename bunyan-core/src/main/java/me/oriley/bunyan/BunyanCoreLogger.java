@@ -30,11 +30,22 @@ public class BunyanCoreLogger {
     @NonNull
     private final String mName;
 
+    @Nullable
+    private final Class mClass;
+
+
+    // Specifying a name will skip any tag layout preferences
+    public BunyanCoreLogger(@NonNull String name) {
+        mName = name;
+        mThreshold = Bunyan.getThreshold(name);
+        mClass = null;
+    }
 
     public BunyanCoreLogger(@NonNull Class c) {
+        mClass = c;
         String className = c.getName();
+        mName = className;
         mThreshold = Bunyan.getThreshold(className);
-        mName = Bunyan.getLoggerName(className);
     }
 
 
@@ -42,6 +53,10 @@ public class BunyanCoreLogger {
 
     public void trace(String msg) {
         log(Log.VERBOSE, msg, (Throwable) null);
+    }
+
+    public void trace(String format, Object arg) {
+        log(Log.VERBOSE, format, arg);
     }
 
     public void trace(String format, Object... argArray) {
@@ -60,6 +75,10 @@ public class BunyanCoreLogger {
         log(Log.DEBUG, msg, (Throwable) null);
     }
 
+    public void debug(String format, Object arg) {
+        log(Log.DEBUG, format, arg);
+    }
+
     public void debug(String format, Object... argArray) {
         log(Log.DEBUG, format, argArray);
     }
@@ -74,6 +93,10 @@ public class BunyanCoreLogger {
 
     public void info(String msg) {
         log(Log.INFO, msg, (Throwable) null);
+    }
+
+    public void info(String format, Object arg) {
+        log(Log.INFO, format, arg);
     }
 
     public void info(String format, Object... argArray) {
@@ -92,6 +115,10 @@ public class BunyanCoreLogger {
         log(Log.WARN, msg, (Throwable) null);
     }
 
+    public void warn(String format, Object arg) {
+        log(Log.WARN, format, arg);
+    }
+
     public void warn(String format, Object... argArray) {
         log(Log.WARN, format, argArray);
     }
@@ -106,6 +133,10 @@ public class BunyanCoreLogger {
 
     public void error(String msg) {
         log(Log.ERROR, msg, (Throwable) null);
+    }
+
+    public void error(String format, Object arg) {
+        log(Log.ERROR, format, arg);
     }
 
     public void error(String format, Object... argArray) {
@@ -124,6 +155,10 @@ public class BunyanCoreLogger {
         log(Log.ASSERT, msg, (Throwable) null);
     }
 
+    public void wtf(String format, Object arg) {
+        log(Log.ASSERT, format, arg);
+    }
+
     public void wtf(String format, Object... argArray) {
         log(Log.ASSERT, format, argArray);
     }
@@ -137,13 +172,13 @@ public class BunyanCoreLogger {
     private void log(@Level int level, @Nullable String format, @Nullable Object... argArray) {
         if (isLoggable(level)) {
             FormattingPair ft = MessageFormatter.formatArray(format, argArray);
-            Bunyan.logEvent(level, mName, ft.message, ft.throwable);
+            Bunyan.logEvent(level, mName, mClass, ft.message, ft.throwable);
         }
     }
 
     private void log(@Level int level, @Nullable String message, @Nullable Throwable throwable) {
         if (isLoggable(level)) {
-            Bunyan.logEvent(level, mName, message, throwable);
+            Bunyan.logEvent(level, mName, mClass, message, throwable);
         }
     }
 

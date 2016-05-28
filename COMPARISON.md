@@ -15,7 +15,7 @@ private void logTest() {
     Object[] objArray = new Object[] { 7, "WORD", this, new String[] { "Some", "Words" }, drawable};
 
     long startMillis = System.currentTimeMillis();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 10000; i++) {
         log.debug("Single object: {}", drawable);
         log.debug("Single array: {}", objArray);
         log.debug("Multiple objects: {}, {}, {}", this, drawable, 9);
@@ -31,23 +31,23 @@ nothing of consequence to runtime logging performance). Tests were performed usi
 
 The results were as follows (all figures are the execution time in milliseconds):
 
-    |         | Logback                  | Bunyan                  |
-    |---------| -------------------------|-------------------------|
-    | 4.2.2   | 994, 876, 884, 913, 874  | 723, 840, 769, 737, 791 |
-    | 4.2.2   | 872, 910, 903, 900, 911  | 761, 812, 733, 742, 744 |
-    | 5.1.0   | 463, 350, 323, 420, 452  | 263, 303, 286, 290, 230 |
-    | 5.1.0   | 384, 410, 514, 375, 396  | 219, 243, 285, 235, 204 |
-    | 6.0.0   | 356, 379, 410, 483, 420  | 256, 271, 276, 307, 266 |
-    | 6.0.0   | 396, 387, 502, 493, 469  | 296, 274, 291, 295, 249 |
+    |         | Logback 1.1.1-5               | Bunyan 0.4.1                 |
+    |---------| ------------------------------|------------------------------|
+    | 4.2.2   | 4219, 4052, 3590, 4229, 2844  | 1533, 1756, 2033, 1354, 1337 |
+    | 4.2.2   | 4424, 4313, 3872, 2947, 3695  | 1482, 1475, 2148, 1836, 1823 |
+    | 5.1.0   | 1103, 1027, 1042, 994, 984    | 469, 370, 368, 383, 299      |
+    | 5.1.0   | 1026, 1132, 957, 1086, 948    | 453, 414, 439, 377, 374      |
+    | 6.0.0   | 1053, 995, 748, 815, 978      | 392, 464, 441, 374, 348      |
+    | 6.0.0   | 1092, 917, 883, 992, 883      | 413, 516, 397, 452, 398      |
 
 And heres a quick comparison of the method counts and dex sizes:
 
-    |                | Logback 1.1.1-5   | Bunyan 0.4.0   |
+    |                | Logback 1.1.1-5   | Bunyan 0.4.1   |
     |----------------| ------------------|----------------|
-    | Core           | 2716 (287KB)      | 123 (17KB)     |
+    | Core           | 2716 (287KB)      | 116 (17KB)     |
     | Dependencies   | 582 (48KB)        | 20 (7KB)       |
     |----------------| ------------------|----------------|
-    | Total          | 3298 (335KB)      | 143 (24KB)     |
+    | Total          | 3298 (335KB)      | 136 (24KB)     |
 
 Make of this what you will, but I wanted to demonstrate that if fast, simple logging is what you're after, maybe give
 Bunyan a go before moving on to one of the fully fledged SLF4J loggers.

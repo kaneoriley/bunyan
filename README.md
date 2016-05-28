@@ -3,9 +3,8 @@
 [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan)
 [![Dependency Status](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b/badge.svg?style=flat)](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b)
 
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-core%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 123 | deps: 20 | size: 17 KB-f44336.svg"></img></a>  
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-crashlytics%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>  
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-lombok%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 6 | additional deps: 0 | size: 2 KB-ff9800.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-core%3A0.5.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 123 | deps: 20 | size: 17 KB-f44336.svg"></img></a>
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-crashlytics%3A0.5.0"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>
 
 # Bunyan
 ![Logo](artwork/icon.png)
@@ -39,23 +38,26 @@ Check out [this SLF4j documentation](http://www.slf4j.org/faq.html#logging_perfo
 
 Have a look at [COMPARISON.md](COMPARISON.md) for a quick benchmark comparison demonstrating the speed of Bunyan
 
-A short summary is that Bunyan is about 20% faster and has 4% of the method count when compared to Logback.
+A short summary is that Bunyan is about 50% faster at runtime and has 4% of the method count when compared to Logback.
 
 ## Configuration
 
 Bunyan requires you to add a `bunyan.xml` to your root `assets` folder, to read configuration details. If this file is
 not present, there are default values which will be used.
 
-A basic configuration file is as follows:
+A basic configuration file that will perform standard logging is as follows:
 
 ```xml
 <bunyan>
-    <!-- global threshold and tag style -->
-    <global level="INFO" tagstyle="SHORT"/> <!-- These are the default values -->
+    <!-- global threshold and tag pattern -->
+    <global level="INFO" tagPattern="%S"/> <!-- These are the default values -->
+
+    <!-- Simple logcat appender, explained below -->
+    <appender class="me.oriley.bunyan.BunyanLogcatAppender"/>
 </bunyan>
 ```
 
-There are 5 acceptable values for logging threshold `level`:
+There are 6 acceptable values for logging threshold `level`:
 
  * ASSERT:  Threshold for `android.util.Log.ASSERT` / `log.wtf()`
  * ERROR:  Threshold for `android.util.Log.ERROR` / `log.error()`
@@ -64,25 +66,26 @@ There are 5 acceptable values for logging threshold `level`:
  * DEBUG:  Threshold for `android.util.Log.DEBUG` / `log.debug()`
  * TRACE:  Threshold for `android.util.Log.VERBOSE` / `log.trace()`
 
-Any logs with a lower priority than the value specified will not be passed along to any of the loggers.
+Any logs with a lower priority than the value specified will not be passed along to any of the appenders.
 
-There are 4 acceptable values for `tagstyle`:
+There are 6 placeholder values available for `tagPattern`:
 
- * RESTRICTED:  Restrict to 23 characters (suggested maximum for `Log`)
- * SHORT:       The enclosing class simple name, i.e. `MyActivity`
- * LONG:        The enclosing class name including package, i.e. `com.myapp.MyActivity`
- * FULL:        Same as LONG but with calling method name appended, i.e. `com.myapp.MyActivity[onResume]`
+ * `%n`:  The enclosing class simple name, i.e. `MyActivity`
+ * `%N`:  The enclosing class name including package, i.e. `com.myapp.MyActivity`
+ * `%m`:  The calling method name, i.e. `onResume`
+ * `%T`:  The current thread name, i.e. `Thread-11`
+ * `%t`:  The same as `%T`, but will only include the thread name if not running on the UI/Main thread.
+ * `%l`:  The logging level, represented as a single character, i.e. `A`, `E`, `W`, `I`, `D`, or `V`
 
- Note that FULL tags require traversing the stack trace to find method names, which could have an adverse impact on
- performance. This is why I would suggest only using FULL on debug builds, or passing in the method name as part of
+ Note that `%m` tags require traversing the stack trace to find method names, which could have an adverse impact on
+ performance. This is why I would suggest only using them on debug builds, or passing in the method name as part of
  the message instead if necessary.
-
-You can also set class specific thresholds to override the global level if you need to:
 
 ```xml
 <bunyan>
     <!-- global default values and configuration -->
-    <global level="INFO" tagstyle="SHORT"/>
+    <global level="INFO" tagPattern="%S"/>
+    <appender class="me.oriley.bunyan.BunyanLogcatAppender"/>
 
     <!-- Class specific thresholds -->
     <logger class="my.app.SpamController" level="ERROR" /> <!-- To quieten a particularly noisy class temporarily -->
@@ -90,65 +93,95 @@ You can also set class specific thresholds to override the global level if you n
 </bunyan>
 ```
 
+The gradle plugin `bunyan-plugin` (more below) will parse this configuration and generate a class file at compile time,
+so that at runtime the static initialisation takes < 0ms and uses no `InputStream` or `getResourceAsStream` methods that
+other libraries use and can introduce lag in application startup, as well as bloating memory consumption.
 
-Included are two sample loggers, that you will need to add to Bunyan manually inside a static block inside your
-`Application` class, to ensure they are initialised early and can capture all logging in your application.
+You can override individual configuration options in a `bunyan-overrides.xml` file placed in your root `assets` folder.
+This can be used to change specific values for certain build types or flavors, without needing to copy and paste the
+entire base configuration everywhere.
 
-#### BunyanLogcatLogger
+Included are three sample appenders, that you will need to add to your configuration xml if you would like to have them
+used. The same method applies to any custom appenders you create, provided they have a zero argument constructor.
 
-Takes no arguments and appends all logs to Logcat. This should be used unless you have implemented your own logger
-to handle this.
+#### BunyanLogcatAppender
 
-```java
-static {
-    Bunyan.addLogger(new BunyanLogcatLogger());
-}
+```xml
+<bunyan>
+    ...
+    <appender class="me.oriley.bunyan.BunyanLogcatAppender"/>
+</bunyan>
 ```
 
-#### BunyanCrashlyticsLogger
+Takes no arguments and appends all logs to Logcat. This should be used unless you have implemented your own appender
+to handle this.
+
+#### BunyanCrashlyticsAppender and BunyanCrashlyticsExceptionAppender
 
 Note: Requires an extra dependency (listed in the dependency section below)
 
-Takes 2 arguments. The first is `Crashlytics.class`, to prevent instantiation in projects where Crashlytics is not
-available as it is not included as a compile dependency in Bunyan. The second parameter tells the logger whether any
-logged exceptions should be sent to Crashlytics as a Non-Fatal (defaults to false).
+There are two different Crashlytics appenders. Only include one of them, depending on your desired usage, otherwise
+all logs will be sent to the Crashlytics SDK twice.
+
+```xml
+<bunyan>
+    ...
+    <appender class="me.oriley.bunyan.crashlytics.BunyanCrashlyticsAppender"/>
+</bunyan>
+```
+
+Will forward all logs on to the Crashlytics SDK, which will use them when sending in crash reports.
+
+```xml
+<bunyan>
+    ...
+    <appender class="me.oriley.bunyan.crashlytics.BunyanCrashlyticsExceptionAppender"/>
+</bunyan>
+```
+
+The same as `BunyanCrashlyticsAppender`, except all logged exceptions will also be reported to Crashlytics as
+Non-Fatals. Use this if you like to keep track of exceptions you are logging.
+
+Remember, no appenders are automatically installed, so by default no logging will be done if you don't add any to your
+configuration.
+
+## Custom Appenders
+
+You also have the option of adding your own custom appenders for capturing logs to send to your analytics platform of
+choice. Simply implement the `BunyanAppender` interface and handle log events as required. You will also need to add
+an entry for the appender to your configuration xml.
+
+```xml
+<bunyan>
+    ...
+    <!-- Where MyAnalyticsAppender is your custom appender with a zero argument constructor -->
+    <appender class="com.my.app.MyAnalyticsAppender"/>
+</bunyan>
+```
+
+If you need to perform initialisation on your appender, you can add it manually from your code. I would suggest doing
+it inside your `Application`s `attachBaseContext` method, so that it can be capturing logs as soon as possible.
 
 ```java
-static {
+protected void attachBaseContext(Context base) {
     ...
-    Bunyan.addLogger(new BunyanCrashlyticsLogger(Crashlytics.class, true));
+    // Where MyComplicatedAppender is your custom appender
+    Bunyan.addAppender(new MyComplicatedAppender(this, "Needs", "Arguments")); 
 }
 ```
 
-No loggers are automatically installed, so by default no logging will be done if you don't add any. There is also an
-`addLoggers` method that takes a varargs array, so you could simplify the above to:
+There is also an `addAppenders` method that takes a varargs array, so you can add multiple at the same time:
 
 ```java
-static {
-    Bunyan.addLoggers(new BunyanLogcatLogger(), new BunyanCrashlyticsLogger(Crashlytics.class, true));
-}
-```
-
-## Custom Loggers
-
-You also have the option of adding your own custom loggers for capturing logs to send to your analytics platform of
-choice. Simply implement the `BunyanLogger` interface and handle log events as required. You will also need to add
-the logger to Bunyan inside the static initialisation block like so:
-
-```java
-static {
+protected void attachBaseContext(Context base) {
     ...
-    Bunyan.addLogger(new MyAnalyticsLogger()); // Where MyAnalyticsLogger is your custom class
+    Bunyan.addAppenders(new Appender1(context), new Appender2(context));
 }
 ```
 
 ## Usage
 
-There are two methods for using Bunyan, depending on whether you use [Project Lombok](https://projectlombok.org/) and like
-to take advantage of the `@Slf4j` annotation. This requires an extra dependency (listed below) in order to create a shim
-so that the code Lombok generates will be able to successfully retrieve a `BunyanCoreLogger` instance.
-
-If you don't use Project Lombok, you will need to create a field in each class where you wish to use Bunyan, like so:
+You will need to create a field in each class where you wish to use Bunyan, like so:
 
 ```java
 public class MyClass {
@@ -158,17 +191,7 @@ public class MyClass {
 }
 ```
 
-If you do use Lombok and include the extra dependency, it will take care of the logger creation for you
-by adding a simple annotation:
-
-```java
-@Slf4j
-public class MyClass {
-    // log field is automatically generated by the Lombok plugin
-}
-```
-
-Some examples of using the SLF4J logging interface:
+Once that is done, you can use the logging interface as per usual. A few examples:
 
 ```java
 public void myMethod(int value) {
@@ -185,9 +208,47 @@ public void myMethod(int value) {
 }
 ```
 
+If you use [Project Lombok](https://projectlombok.org/), there are four extra modules that can allow you to hook into
+the automatic `log` field generation that is provided. You should only include one, depending on which annotation you
+wish to use to create your log fields. Because Lombok will look for specific classes that are available in the relevant
+logging framework, make sure to choose one that does not exist in your application, to avoid namespace clashes
+
+
+    |---------------------| ------------------------------------------------------------------|
+    | Lombok Annotation   | Required Dependency                                               |
+    |---------------------| ------------------------------------------------------------------|
+    | @Log4j              | compile 'com.github.oriley-me.bunyan:bunyan-lombok-log4j:0.4.0'   |
+    | @Log4j2             | compile 'com.github.oriley-me.bunyan:bunyan-lombok-log4j2:0.4.0'  |
+    | @Slf4j              | compile 'com.github.oriley-me.bunyan:bunyan-lombok-slf4j:0.4.0'   |
+    | @XSlf4j             | compile 'com.github.oriley-me.bunyan:bunyan-lombok-xslf4j:0.4.0'  |
+    |---------------------| ------------------------------------------------------------------|
+
+After including the correct dependency, you can annotate a class to have the the field generated as per usual:
+
+```java
+@Slf4j // If you included the -slf4j dependency
+public class MyClass {
+    // log field is automatically generated by the Lombok plugin
+}
+```
+
 ## Gradle Dependency
 
- * Add JitPack.io to your repositories list in the root projects build.gradle:
+ * Add JitPack.io repo and `bunyan-plugin` dependency to your buildscript:
+
+```gradle
+buildscript {
+    repositories {
+        maven { url "https://jitpack.io" }
+    }
+
+    dependencies {
+        classpath 'com.github.oriley-me.bunyan:bunyan-plugin:0.5.0'
+    }
+}
+```
+
+ * Add JitPack.io to your app projects repositories list:
 
 ```gradle
 repositories {
@@ -195,23 +256,25 @@ repositories {
 }
 ```
 
- * Add the required dependencies:
+ * Apply the plugin to your application or library project, and add the module runtime dependency:
 
 ```gradle
+apply plugin: 'com.android.application' || apply plugin: 'com.android.library'
+apply plugin: 'me.oriley.bunyan-plugin'
+
+...
+
 dependencies {
     // Required
-    compile 'com.github.oriley-me.bunyan:bunyan-core:0.4.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-core:0.5.0'
 
-    // Only necessary if you plan on using a BunyanCrashlyticsLogger
-    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.4.0'
+    // Only necessary if you plan on using a BunyanCrashlyticsAppender/BunyanCrashlyticsExceptionAppender
+    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.5.0'
 
-    // Only necessary to take advantage of Lombok's @Slf4j annotations
-    compile 'com.github.oriley-me.bunyan:bunyan-lombok:0.4.0'
+    // Make sure include any Lombok helper module you require here
 }
 ```
 
-#### Note: Clash with org.slf4j:slf4j-api
-
-Due to Lombok requiring the factory to be a `org.slf4j.LoggerFactory` class, you cannot include `bunyan-lombok` in a
-project which already includes the standard SLF4J dependency. But if that were already a dependency, you must already
-have a logging interface included in your project, reducing the usefulness of Bunyan ;-).
+If you would like to check out the latest development version, please substitute all versions for `develop-SNAPSHOT`.
+Keep in mind that it is very likely things could break or be unfinished, so stick the official releases if you want
+things to be more predictable.
