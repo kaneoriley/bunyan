@@ -22,7 +22,7 @@ allprojects {
         mavenLocal()
     }
 
-    group = 'me.oriley.bunyan'
+    group = 'com.github.oriley-me.bunyan'
     version = 'LOCAL-SNAPSHOT'
 }
 

@@ -3,9 +3,8 @@
 [![Build Status](https://travis-ci.org/oriley-me/bunyan.svg?branch=master)](https://travis-ci.org/oriley-me/bunyan)
 [![Dependency Status](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b/badge.svg?style=flat)](https://www.versioneye.com/user/projects/571b91d2fcd19a00415b267b)
 
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-core%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 123 | deps: 20 | size: 17 KB-f44336.svg"></img></a>  
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-crashlytics%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>  
-<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-lombok%3A0.4.0"><img src="https://img.shields.io/badge/bunyan_lombok-methods: 6 | additional deps: 0 | size: 2 KB-ff9800.svg"></img></a>  
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-core%3A0.5.0"><img src="https://img.shields.io/badge/bunyan_core-methods: 123 | deps: 20 | size: 17 KB-f44336.svg"></img></a>
+<a href="http://www.methodscount.com/?lib=com.github.oriley-me.bunyan%3Abunyan-crashlytics%3A0.5.0"><img src="https://img.shields.io/badge/bunyan_crashlytics-methods: 11 | additional deps: 0 | size: 3 KB-ff9800.svg"></img></a>
 
 # Bunyan
 ![Logo](artwork/icon.png)
@@ -244,7 +243,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.oriley-me.bunyan:bunyan-plugin:0.4.1'
+        classpath 'com.github.oriley-me.bunyan:bunyan-plugin:0.5.0'
     }
 }
 ```
@@ -267,10 +266,10 @@ apply plugin: 'me.oriley.bunyan-plugin'
 
 dependencies {
     // Required
-    compile 'com.github.oriley-me.bunyan:bunyan-core:0.4.1'
+    compile 'com.github.oriley-me.bunyan:bunyan-core:0.5.0'
 
     // Only necessary if you plan on using a BunyanCrashlyticsAppender/BunyanCrashlyticsExceptionAppender
-    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.4.1'
+    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.5.0'
 
     // Make sure include any Lombok helper module you require here
 }

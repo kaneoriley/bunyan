@@ -1,7 +1,9 @@
 Change Log
 ==========
 
-## Version 0.4.1 WIP
+## Version 0.5.0
+
+_2016-05-28_
 
  *  API Change: Split Lombok helper module into four separate dependencies to cater for cases where there may
     be a namespace clash (there's now `-log4j`, `-log4j2`, `-slf4j` and `-xslf4j` modules for `@Log4j`, `@Log4j2`, `@Slf4J` and 
