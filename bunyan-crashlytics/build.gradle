@@ -5,5 +5,5 @@ dependencies {
     compile project(':bunyan-core')
 
     // Crashlytics
-    provided 'com.crashlytics.sdk.android:crashlytics:2.5.5'
+    provided 'com.crashlytics.sdk.android:crashlytics:2.6.7'
 }
