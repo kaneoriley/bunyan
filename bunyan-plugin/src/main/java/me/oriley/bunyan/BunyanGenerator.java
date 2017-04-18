@@ -242,6 +242,12 @@ public final class BunyanGenerator {
     }
 
     private void parseFile(@NonNull String fileName) throws XmlPullParserException, IOException {
+        File file = new File(mVariantAssetDir + fileName);
+        if (!file.exists()) {
+            log(fileName + " does not exist, skipping");
+            return;
+        }
+
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
         factory.setNamespaceAware(true);
         XmlPullParser xpp = factory.newPullParser();
