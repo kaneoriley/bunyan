@@ -243,7 +243,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.oriley-me.bunyan:bunyan-plugin:0.5.0'
+        classpath 'com.github.oriley-me.bunyan:bunyan-plugin:0.5.1'
     }
 }
 ```
@@ -266,10 +266,10 @@ apply plugin: 'me.oriley.bunyan-plugin'
 
 dependencies {
     // Required
-    compile 'com.github.oriley-me.bunyan:bunyan-core:0.5.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-core:0.5.1'
 
     // Only necessary if you plan on using a BunyanCrashlyticsAppender/BunyanCrashlyticsExceptionAppender
-    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.5.0'
+    compile 'com.github.oriley-me.bunyan:bunyan-crashlytics:0.5.1'
 
     // Make sure include any Lombok helper module you require here
 }

@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+## Version 0.5.1
+
+_2017-04-18_
+
+ *  Dependency updates
+ *  Remove log spew if XML configuration files don't exist
+ *  Only add generated files to variant specific source set
+
 ## Version 0.5.0
 
 _2016-05-28_
